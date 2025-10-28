@@ -7,6 +7,8 @@ import {
   MdHome,
   MdLock,
   MdOutlineShoppingCart,
+  MdEvent,
+  MdAddCircle
 } from 'react-icons/md';
 
 // Admin Imports
@@ -15,12 +17,28 @@ import NFTMarketplace from 'views/admin/marketplace';
 import Profile from 'views/admin/profile';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
+import EventList from "views/admin/eventList";
+import CreateEvent from "views/admin/createEvent";
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import SignUpCentered from 'views/auth/signUp';
 
 const routes = [
+  {
+    name: "Lista de eventos",
+    layout: "/admin",
+    path: "/event-list",
+    icon: <Icon as={MdEvent} width="20px" height="20px" color="inherit" />,
+    component: <EventList />,
+  },
+  {
+    name: "Crear Evento",
+    layout: "/admin",
+    path: "/create-event",
+    icon: <Icon as={MdAddCircle} width="20px" height="20px" color="inherit" />,
+    component: <CreateEvent />,
+  },
   {
     name: 'Main Dashboard',
     layout: '/user',
