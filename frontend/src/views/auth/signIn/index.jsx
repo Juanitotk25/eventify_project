@@ -21,8 +21,10 @@
 
 */
 
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState } from "react"; // 1. Importar useState
+import { NavLink, useNavigate } from "react-router-dom"; // 1. Importar useNavigate
+import axios from 'axios'; // 1. Importar axios
+
 // Chakra imports
 import {
   Box,
@@ -38,6 +40,7 @@ import {
   InputRightElement,
   Text,
   useColorModeValue,
+  useToast, // 2. Opcional: Para mostrar mensajes de éxito/error
 } from "@chakra-ui/react";
 // Custom components
 import { HSeparator } from "components/separator/Separator";
@@ -48,8 +51,25 @@ import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
 
+// URL BASE DE BACKEND
+const API_LOGIN_URL = 'http://127.0.0.1:8000/api/users/login/'; 
+
+
 function SignIn() {
-  // Chakra color mode
+  // Inicialización de hooks y estados
+  const navigate = useNavigate(); // Hook de navegación para redirigir
+  const toast = useToast(); // Hook para mostrar notificaciones
+  
+  // 3. Estados para capturar el formulario
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // Estado para el botón de carga
+
+  // Estados y funciones existentes
+  const [show, setShow] = React.useState(false);
+  const handleClick = () => setShow(!show);
+  
+  // ... (El resto de variables de estilo de Chakra UI)
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
@@ -65,11 +85,69 @@ function SignIn() {
     { bg: "secondaryGray.300" },
     { bg: "whiteAlpha.200" }
   );
-  const [show, setShow] = React.useState(false);
-  const handleClick = () => setShow(!show);
+  // (Fin de variables de estilo)
+  
+  // 4. Función principal de envío del formulario
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Evita que la página se recargue
+    setLoading(true);
+
+    try {
+      const response = await axios.post(API_LOGIN_URL, {
+        // DRF Simple JWT espera 'username' y 'password'.
+        // Usamos el 'email' ingresado como el 'username'
+        username: email, 
+        password: password,
+      });
+
+      // La respuesta exitosa contiene los tokens
+      const { access, refresh } = response.data;
+      
+      // 5. Almacenar los tokens de autenticación
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      
+      // Mostrar notificación de éxito
+      toast({
+        title: "¡Ingreso Exitoso!",
+        description: "Redirigiendo al Dashboard.",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+
+      // 6. Redirigir al dashboard (Ruta por defecto del dashboard de Horizon UI)
+      navigate('/admin/default');
+
+    } catch (error) {
+      // 7. Manejo de errores
+      const message = 
+        error.response && error.response.data.detail 
+        ? error.response.data.detail // Mensaje de Django (ej: "No active account found with the given credentials")
+        : "Error de conexión o credenciales inválidas.";
+
+      toast({
+        title: "Error de Ingreso",
+        description: message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error("Login fallido:", error.response || error);
+    } finally {
+      setLoading(false); // Desactivar la carga del botón
+    }
+  };
+
+
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
       <Flex
+        // (Código de estilos de Flex)
+        // Agregamos un formulario (Form) que envuelve el FormControl
+        as="form" 
+        onSubmit={handleSubmit} // Asignamos la función de envío
+        // ... (El resto de estilos de Flex)
         maxW={{ base: "100%", md: "max-content" }}
         w='100%'
         mx={{ base: "auto", lg: "0px" }}
@@ -81,19 +159,22 @@ function SignIn() {
         px={{ base: "25px", md: "0px" }}
         mt={{ base: "40px", md: "14vh" }}
         flexDirection='column'>
+
+        {/* Código de Heading y Text */}
         <Box me='auto'>
-          <Heading color={textColor} fontSize='36px' mb='10px'>
-            Ingresa
-          </Heading>
-          <Text
-            mb='36px'
-            ms='4px'
-            color={textColorSecondary}
-            fontWeight='400'
-            fontSize='md'>
-            Ingresa tu correo electrónico y contraseña para ingresar!
-          </Text>
+            <Heading color={textColor} fontSize='36px' mb='10px'>
+                Ingresa
+            </Heading>
+            <Text
+                mb='36px'
+                ms='4px'
+                color={textColorSecondary}
+                fontWeight='400'
+                fontSize='md'>
+                Ingresa tu correo electrónico y contraseña para ingresar!
+            </Text>
         </Box>
+
         <Flex
           zIndex='2'
           direction='column'
@@ -104,6 +185,8 @@ function SignIn() {
           mx={{ base: "auto", lg: "unset" }}
           me='auto'
           mb={{ base: "20px", md: "auto" }}>
+          
+          {/* (Código de Botón de Google y Separator) */}
           <Button
             fontSize='sm'
             me='0px'
@@ -127,7 +210,9 @@ function SignIn() {
             </Text>
             <HSeparator />
           </Flex>
+
           <FormControl>
+            {/* Campo de Correo Electrónico */}
             <FormLabel
               display='flex'
               ms='4px'
@@ -147,7 +232,12 @@ function SignIn() {
               mb='24px'
               fontWeight='500'
               size='lg'
+              // 8. ASIGNAR VALOR Y CAMBIOS AL ESTADO
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
+            
+            {/* Campo de Contraseña */}
             <FormLabel
               ms='4px'
               fontSize='sm'
@@ -165,6 +255,9 @@ function SignIn() {
                 size='lg'
                 type={show ? "text" : "password"}
                 variant='auth'
+                // 9. ASIGNAR VALOR Y CAMBIOS AL ESTADO
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <InputRightElement display='flex' alignItems='center' mt='4px'>
                 <Icon
@@ -175,6 +268,8 @@ function SignIn() {
                 />
               </InputRightElement>
             </InputGroup>
+            
+            {/* (Ccódigo de Checkbox y Forgot Password) */}
             <Flex justifyContent='space-between' align='center' mb='24px'>
               <FormControl display='flex' alignItems='center'>
                 <Checkbox
@@ -201,16 +296,23 @@ function SignIn() {
                 </Text>
               </NavLink>
             </Flex>
+            
+            {/* Botón de Iniciar Sesión */}
             <Button
               fontSize='sm'
               variant='brand'
               fontWeight='500'
               w='100%'
               h='50'
-              mb='24px'>
+              mb='24px'
+              type='submit' // 10. Indicar que este botón envía el formulario
+              isLoading={loading} // Mostrar estado de carga
+              >
               Sign In
             </Button>
           </FormControl>
+          
+          {/* ... (Código de Create an Account) */}
           <Flex
             flexDirection='column'
             justifyContent='center'
