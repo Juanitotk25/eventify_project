@@ -61,7 +61,7 @@ function SignIn() {
   const toast = useToast(); // Hook para mostrar notificaciones
   
   // 3. Estados para capturar el formulario
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false); // Estado para el botón de carga
 
@@ -96,7 +96,7 @@ function SignIn() {
       const response = await axios.post(API_LOGIN_URL, {
         // DRF Simple JWT espera 'username' y 'password'.
         // Usamos el 'email' ingresado como el 'username'
-        username: email, 
+        username: username, 
         password: password,
       });
 
@@ -212,7 +212,7 @@ function SignIn() {
           </Flex>
 
           <FormControl>
-            {/* Campo de Correo Electrónico */}
+            {/* Campo de Username */}
             <FormLabel
               display='flex'
               ms='4px'
@@ -220,21 +220,21 @@ function SignIn() {
               fontWeight='500'
               color={textColor}
               mb='8px'>
-              Correo electrónico<Text color={brandStars}>*</Text>
+              Nombre de usuario<Text color={brandStars}>*</Text>
             </FormLabel>
             <Input
               isRequired={true}
               variant='auth'
               fontSize='sm'
               ms={{ base: "0px", md: "0px" }}
-              type='email'
-              placeholder='correo@electronico.com'
+              type='text'
+              placeholder='Ingresa tu nombre de usuario'
               mb='24px'
               fontWeight='500'
               size='lg'
               // 8. ASIGNAR VALOR Y CAMBIOS AL ESTADO
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
             
             {/* Campo de Contraseña */}
