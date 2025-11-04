@@ -14,9 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+# backend/eventify_project/urls.py
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include  # <--- ¡IMPORTA 'include' aquí!
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # RUTA 1: La que sí funciona (admin)
+    path('admin/', admin.site.urls), 
+    
+    # RUTA 2: La base de tu API de Usuarios
+    path('api/users/', include('users.urls')), 
+    
+    # RUTA 3: La base de tu API de Eventos
+    path('api/', include('event_management.urls')), 
 ]

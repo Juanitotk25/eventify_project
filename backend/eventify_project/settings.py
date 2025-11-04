@@ -39,9 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'event_management',
+    'rest_framework',         # Para crear la API
+    'corsheaders',            # Para manejar la comunicación frontend/backend
 ]
 
 MIDDLEWARE = [
+    
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -65,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            
         },
     },
 ]
@@ -109,6 +114,16 @@ LANGUAGE_CODE = 'es-es'
 
 TIME_ZONE = 'UTC'
 
+# Configuración de CORS (Cross-Origin Resource Sharing)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000", 
+    # Añadimos cualquier otro puerto que se use para el frontend (ej: 3001, 5173, etc.)
+]
+
+# Si vamos a usar cookies de sesión (no es el caso con JWT, pero es una buena práctica)
+CORS_ALLOW_CREDENTIALS = True
+
 USE_I18N = True
 
 USE_TZ = True
@@ -123,3 +138,27 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny', # Permite acceso por defecto hasta que implementes seguridad
+    )
+}
+
+# Configuración de Simple JWT
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Tiempo que dura el token de acceso (ej: 1 hora)
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    # Tiempo que dura el token de refresco (para obtener un nuevo token de acceso)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    
+    # Esto es vital para el flujo de trabajo: el campo que se usa para iniciar sesión.
+    # Si usas el modelo User por defecto de Django, esto NO es estrictamente necesario,
+    # pero si usas el email como nombre de usuario, el frontend debe enviar 'username' con el valor del email.
+}
