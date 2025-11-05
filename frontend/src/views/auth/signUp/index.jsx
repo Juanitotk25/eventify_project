@@ -72,7 +72,6 @@ function SignUp() {
       <Flex
         maxW={{ base: "100%", md: "max-content" }}
         w='100%'
-        background={'gray.200'}
         ml={'50px'}
         //mx={{ base: "auto", lg: "0px" }}
         //me='auto'

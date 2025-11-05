@@ -7,6 +7,8 @@ import {
   MdHome,
   MdLock,
   MdOutlineShoppingCart,
+  MdEvent,
+  MdAddCircle
 } from 'react-icons/md';
 
 // Admin Imports
@@ -15,12 +17,29 @@ import NFTMarketplace from 'views/admin/marketplace';
 import Profile from 'views/admin/profile';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
+import EventList from "views/admin/eventList";
+import CreateEvent from "views/admin/createEvent";
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import SignUpCentered from 'views/auth/signUp';
+import LandingPage from 'views/auth/landingPage';
 
 const routes = [
+  {
+    name: "Lista de eventos",
+    layout: "/user",
+    path: "/event-list",
+    icon: <Icon as={MdEvent} width="20px" height="20px" color="inherit" />,
+    component: <EventList />,
+  },
+  {
+    name: "Crear Evento",
+    layout: "/user",
+    path: "/create-event",
+    icon: <Icon as={MdAddCircle} width="20px" height="20px" color="inherit" />,
+    component: <CreateEvent />,
+  },
   {
     name: 'Main Dashboard',
     layout: '/user',
@@ -29,8 +48,15 @@ const routes = [
     component: <MainDashboard />,
   },
   {
+    name: "Landing Page",
+    layout: "/auth",
+    path: "/home",
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <LandingPage />,
+  },
+  {
     name: 'NFT Marketplace',
-    layout: '/admin',
+    layout: '/user',
     path: '/nft-marketplace',
     icon: (
       <Icon
@@ -45,14 +71,14 @@ const routes = [
   },
   {
     name: 'Data Tables',
-    layout: '/admin',
+    layout: '/user',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
     path: '/data-tables',
     component: <DataTables />,
   },
   {
     name: 'Profile',
-    layout: '/admin',
+    layout: '/user',
     path: '/profile',
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     component: <Profile />,
