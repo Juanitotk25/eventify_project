@@ -161,7 +161,6 @@ function SignUp() {
         onSubmit={handleRegister} //  Asignamos la función de envío
         maxW={{ base: "100%", md: "max-content" }}
         w='100%'
-        background={'gray.200'}
         ml={'50px'}
         h='100%'
         alignItems='start'
