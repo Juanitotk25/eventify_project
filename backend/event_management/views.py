@@ -1,32 +1,25 @@
+# En event_management/views.py
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Event
 from .serializers import EventSerializer
-from users.models import Profile
+# from users.models import Profile # No necesaria si usamos self.request.user.profile
 
 class EventViewSet(viewsets.ModelViewSet):
-    # Solo permite acceso a usuarios autenticados
     permission_classes = [IsAuthenticated]
     serializer_class = EventSerializer
     
+    # 1. Función para LISTAR eventos (GET)
     def get_queryset(self):
+        # USA LA RELACIÓN INVERSA SIMPLE: self.request.user.profile
         try:
-            current_profile = Profile.objects.get(username=self.request.user)
-            return Event.objects.filter(organizer=current_profile).order_by('-start_time')
-        except Profile.DoesNotExist:
-            # Si el usuario no tiene perfil, no tiene eventos organizados para mostrar.
+            return Event.objects.filter(organizer=self.request.user.profile).order_by('-start_time')
+        except:
+            # Si el usuario no tiene perfil (o cualquier otro error de enlace), no muestra nada.
             return Event.objects.none()
 
+    # 2. Función para CREAR eventos (POST)
     def perform_create(self, serializer):
-        try:
-            # 1. Obtenemos el objeto Profile buscando por el ID del usuario logueado.
-            #    (Asumiendo que Profile tiene un campo user_id o user que enlaza a User)
-            current_profile = Profile.objects.get(username=self.request.user) 
-            
-            # 2. Asignamos el Profile al nuevo evento.
-            serializer.save(organizer=current_profile)
-            
-        except Profile.DoesNotExist:
-            # En un entorno de producción, esto debería lanzar una excepción 403 Forbidden.
-            # Para depuración, simplemente ignoramos.
-            pass
+        # ASIGNA EL ORGANIZADOR USANDO LA RELACIÓN INVERSA
+        serializer.save(organizer=self.request.user.profile)
