@@ -1,29 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="f377cbd6-4055-4fb7-bd20-58785e39b3f1" name="Changes" comment="Added Landing Page and fixed languages">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/eventify_project.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/backend.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/eventify_project.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/assets/img/auth/landing-banner.jpeg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/footer/FooterUser.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/views/auth/landingPage/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/backend/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/footer/FooterAdmin.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/footer/FooterAuth.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/footer/FooterAuth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/layouts/admin/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/layouts/admin/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/layouts/auth/Default.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/layouts/auth/Default.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/layouts/auth/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/layouts/auth/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/layouts/rtl/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/layouts/rtl/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/auth/signIn/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/auth/signIn/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/auth/signUp/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/auth/signUp/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,48 +16,48 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Crimson-Blues"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Crimson-Blues&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Juanitotk25/eventify_project",
-    "accountId": "9faa5ccf-6b96-4869-88d6-cd0e491811fc"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Juanitotk25/eventify_project&quot;,
+    &quot;accountId&quot;: &quot;9faa5ccf-6b96-4869-88d6-cd0e491811fc&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="354HHz4k958kDV3ZfPffTMW7hfb" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "jdcm",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/juanc/Desktop/4to_Semestre/Desarrollo I/eventify_project",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;jdcm&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/juanc/Desktop/4to_Semestre/Desarrollo I/eventify_project&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="eventify_project" type="Python.DjangoServer" factoryName="Django server">
       <module name="eventify_project" />
@@ -117,12 +100,34 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1762362343489</updated>
-      <workItem from="1762362345327" duration="319000" />
+      <workItem from="1762362345327" duration="1254000" />
+      <workItem from="1762394291498" duration="11000" />
+      <workItem from="1762461057072" duration="268000" />
     </task>
+    <task id="LOCAL-00001" summary="Added Landing Page and fixed languages">
+      <option name="closed" value="true" />
+      <created>1762362854945</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1762362854945</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added Landing Page and fixed languages" />
