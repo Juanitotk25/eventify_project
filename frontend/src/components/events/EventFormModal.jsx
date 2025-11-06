@@ -77,7 +77,7 @@ const EventFormModal = ({ isOpen, onClose, currentEvent, fetchEvents, API_BASE_U
         
         const token = localStorage.getItem('access_token');
         const method = currentEvent ? 'PUT' : 'POST';
-        const url = currentEvent ? `${API_BASE_URL}/${currentEvent.id}/` : API_BASE_URL;
+        const url = currentEvent ? `${API_BASE_URL}/${currentEvent.id}/` : `${API_BASE_URL}/`;
 
         // Limpieza de datos (ej. capacity a null si está vacío)
         const dataToSend = {

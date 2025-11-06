@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Box, 
     Button, 
@@ -18,9 +18,10 @@ import moment from 'moment';
 import EventFormModal from 'components/events/EventFormModal';
 
 // **********************************************
-// IMPORTANTE: REEMPLAZA ESTA URL CON TU ENDPOINT REAL
+// IMPORTANTE: DEBE ESTAR SIN LA BARRA FINAL (/)
+// Esto facilita la concatenación para PUT/DELETE
 // **********************************************
-const API_BASE_URL = 'http://localhost:8000/api/events/'; 
+const API_BASE_URL = 'http://localhost:8000/api/events'; 
 
 const EventTable = () => {
     const [events, setEvents] = useState([]);
@@ -34,7 +35,7 @@ const EventTable = () => {
     const toast = useToast();
 
     // **********************************************
-    // FUNCIÓN CENTRAL: OBTENER DATOS DE LA API CON JWT
+    // FUNCIÓN CENTRAL: OBTENER DATOS DE LA API (GET)
     // **********************************************
     const fetchEvents = async () => {
         setIsLoading(true);
@@ -47,7 +48,8 @@ const EventTable = () => {
         }
 
         try {
-            const response = await fetch(API_BASE_URL, {
+            // CORRECCIÓN: Añadir la barra final para el GET LISTAR
+            const response = await fetch(`${API_BASE_URL}/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`, // Envía el Token JWT
                     'Content-Type': 'application/json',
@@ -55,9 +57,16 @@ const EventTable = () => {
             });
 
             if (!response.ok) {
-                // Captura errores 401, 403, 404, 500
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Error ${response.status}: Fallo al obtener eventos.`);
+                const errorText = await response.text();
+                // Intenta parsear JSON, si falla, usa el texto como error
+                let errorMessage;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.detail || errorData[Object.keys(errorData)[0]] || `Error ${response.status}: Fallo al obtener eventos.`;
+                } catch {
+                    errorMessage = `Error ${response.status}: ${errorText}`;
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -103,6 +112,7 @@ const EventTable = () => {
         if (!token) return;
 
         try {
+            // CORRECCIÓN: La URL ya es correcta sin la doble barra: API_BASE_URL + / + eventId + /
             const response = await fetch(`${API_BASE_URL}/${eventId}/`, {
                 method: 'DELETE',
                 headers: {
@@ -110,7 +120,7 @@ const EventTable = () => {
                 },
             });
 
-            if (response.ok) {
+            if (response.status === 204) { // 204 No Content es la respuesta correcta para DELETE
                 toast({
                     title: 'Evento Eliminado',
                     status: 'success',
@@ -118,9 +128,9 @@ const EventTable = () => {
                     isClosable: true,
                 });
                 fetchEvents(); // Recargar la lista
-            } else {
-                 const errorData = await response.json();
-                 throw new Error(errorData.detail || `Error ${response.status}: Fallo al eliminar.`);
+            } else if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Error ${response.status}: Fallo al eliminar.`);
             }
         } catch (err) {
             toast({
@@ -170,7 +180,7 @@ const EventTable = () => {
                 }} 
                 currentEvent={currentEvent} 
                 fetchEvents={fetchEvents}
-                API_BASE_URL={API_BASE_URL}
+                API_BASE_URL={API_BASE_URL} // Se pasa la URL sin la barra final
             />
 
             {events.length === 0 ? (
