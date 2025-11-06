@@ -1,9 +1,7 @@
-# backend/event_management/urls.py
+from rest_framework.routers import DefaultRouter
+from .views import EventViewSet
 
-from django.urls import path
-from . import views
+router = DefaultRouter()
+router.register(r'events', EventViewSet, basename='event')
 
-urlpatterns = [
-    # path('events/', views.EventListCreateView.as_view(), name='event-list'),
-    # Aquí irán las rutas para listar, crear, ver y editar eventos.
-]
+urlpatterns = router.urls
