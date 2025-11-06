@@ -9,9 +9,9 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     
     def get_queryset(self):
-        # Filtra eventos para mostrar solo los que el usuario logueado organizó
-        # Si usas Profile.user para acceder al usuario, ajusta el filtro
-        return Event.objects.filter(organizer=self.request.user.profile).order_by('-start_time')
+        if hasattr(self.request.user, 'profile'):
+             return Event.objects.filter(organizer=self.request.user.profile).order_by('-start_time')
+        return Event.objects.none() # Devuelve vacío si no hay perfil
 
     def perform_create(self, serializer):
         # Asigna automáticamente el usuario logueado como organizador
