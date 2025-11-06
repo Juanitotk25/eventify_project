@@ -1,172 +1,238 @@
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
+import React, { useState, useEffect } from 'react';
+import { 
+    Box, 
+    Button, 
+    Text, 
+    Flex, 
+    Table, 
+    Thead, 
+    Tbody, 
+    Tr, 
+    Th, 
+    Td, 
+    useDisclosure,
+    useToast 
+} from '@chakra-ui/react';
+import { MdAdd, MdEdit, MdDelete } from 'react-icons/md';
+import moment from 'moment';
+import EventFormModal from 'components/events/EventFormModal';
 
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Horizon UI (https://www.horizon-ui.com/)
+// **********************************************
+// IMPORTANTE: DEBE ESTAR SIN LA BARRA FINAL (/)
+// Esto facilita la concatenación para PUT/DELETE
+// **********************************************
+const API_BASE_URL = 'http://localhost:8000/api/events'; 
 
-* Designed and Coded by Simmmple
+const EventTable = () => {
+    const [events, setEvents] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentEvent, setCurrentEvent] = useState(null);
+    
+    // Control del modal (para crear y editar)
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    
+    const toast = useToast();
 
-=========================================================
+    // **********************************************
+    // FUNCIÓN CENTRAL: OBTENER DATOS DE LA API (GET)
+    // **********************************************
+    const fetchEvents = async () => {
+        setIsLoading(true);
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+            setError("Error: Token JWT no encontrado. Por favor, inicie sesión de nuevo.");
+            setIsLoading(false);
+            return;
+        }
 
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+        try {
+            // CORRECCIÓN: Añadir la barra final para el GET LISTAR
+            const response = await fetch(`${API_BASE_URL}/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Envía el Token JWT
+                    'Content-Type': 'application/json',
+                },
+            });
 
-*/
+            if (!response.ok) {
+                const errorText = await response.text();
+                // Intenta parsear JSON, si falla, usa el texto como error
+                let errorMessage;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.detail || errorData[Object.keys(errorData)[0]] || `Error ${response.status}: Fallo al obtener eventos.`;
+                } catch {
+                    errorMessage = `Error ${response.status}: ${errorText}`;
+                }
+                throw new Error(errorMessage);
+            }
 
-// Chakra imports
-import {
-  Avatar,
-  Box,
-  Flex,
-  FormLabel,
-  Icon,
-  Select,
-  SimpleGrid,
-  useColorModeValue,
-} from "@chakra-ui/react";
-// Assets
-import Usa from "assets/img/dashboards/usa.png";
-// Custom components
-import MiniCalendar from "components/calendar/MiniCalendar";
-import MiniStatistics from "components/card/MiniStatistics";
-import IconBox from "components/icons/IconBox";
-import React from "react";
-import {
-  MdAddTask,
-  MdAttachMoney,
-  MdBarChart,
-  MdFileCopy,
-} from "react-icons/md";
-import CheckTable from "views/admin/default/components/CheckTable";
-import ComplexTable from "views/admin/default/components/ComplexTable";
-import DailyTraffic from "views/admin/default/components/DailyTraffic";
-import PieCard from "views/admin/default/components/PieCard";
-import Tasks from "views/admin/default/components/Tasks";
-import TotalSpent from "views/admin/default/components/TotalSpent";
-import WeeklyRevenue from "views/admin/default/components/WeeklyRevenue";
-import {
-  columnsDataCheck,
-  columnsDataComplex,
-} from "views/admin/default/variables/columnsData";
-import tableDataCheck from "views/admin/default/variables/tableDataCheck.json";
-import tableDataComplex from "views/admin/default/variables/tableDataComplex.json";
+            const data = await response.json();
+            setEvents(data);
+            setError(null);
+            
+        } catch (err) {
+            setError(err.message || "Error de conexión al servidor.");
+            toast({
+                title: 'Error de Carga',
+                description: err.message || "No se pudo cargar la lista de eventos.",
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-export default function UserReports() {
-  // Chakra Color Mode
-  const brandColor = useColorModeValue("brand.500", "white");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  return (
-    <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      <SimpleGrid
-        columns={{ base: 1, md: 2, lg: 3, "2xl": 6 }}
-        gap='20px'
-        mb='20px'>
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='56px'
-              h='56px'
-              bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdBarChart} color={brandColor} />
-              }
-            />
-          }
-          name='Earnings'
-          value='$350.4'
-        />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='56px'
-              h='56px'
-              bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdAttachMoney} color={brandColor} />
-              }
-            />
-          }
-          name='Spend this month'
-          value='$642.39'
-        />
-        <MiniStatistics growth='+23%' name='Sales' value='$574.34' />
-        <MiniStatistics
-          endContent={
-            <Flex me='-16px' mt='10px'>
-              <FormLabel htmlFor='balance'>
-                <Avatar src={Usa} />
-              </FormLabel>
-              <Select
-                id='balance'
-                variant='mini'
-                mt='5px'
-                me='0px'
-                defaultValue='usd'>
-                <option value='usd'>USD</option>
-                <option value='eur'>EUR</option>
-                <option value='gba'>GBA</option>
-              </Select>
+    useEffect(() => {
+        fetchEvents();
+    }, []); 
+
+    // **********************************************
+    // MANEJO DE ACCIONES
+    // **********************************************
+
+    const handleOpenCreate = () => {
+        setCurrentEvent(null); // Abre el modal en modo Creación
+        onOpen();
+    };
+
+    const handleOpenEdit = (event) => {
+        setCurrentEvent(event); // Carga los datos del evento a editar
+        onOpen();
+    };
+
+    const handleDelete = async (eventId) => {
+        if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
+
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        try {
+            // CORRECCIÓN: La URL ya es correcta sin la doble barra: API_BASE_URL + / + eventId + /
+            const response = await fetch(`${API_BASE_URL}/${eventId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.status === 204) { // 204 No Content es la respuesta correcta para DELETE
+                toast({
+                    title: 'Evento Eliminado',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                fetchEvents(); // Recargar la lista
+            } else if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Error ${response.status}: Fallo al eliminar.`);
+            }
+        } catch (err) {
+            toast({
+                title: 'Error de Eliminación',
+                description: err.message,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+    };
+
+    // **********************************************
+    // RENDERIZADO
+    // **********************************************
+
+    if (isLoading) {
+        return <Text mt="100px">Cargando eventos...</Text>;
+    }
+
+    if (error) {
+        return <Text color="red.500" mt="100px">{error}</Text>;
+    }
+
+    return (
+        <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+            <Flex justify="space-between" align="center" mb="30px">
+                <Text fontSize="2xl" fontWeight="bold">
+                    Panel de Eventos
+                </Text>
+                
+                <Button
+                    leftIcon={<MdAdd />}
+                    colorScheme="green"
+                    onClick={handleOpenCreate}
+                >
+                    Añadir Evento
+                </Button>
             </Flex>
-          }
-          name='Your balance'
-          value='$1,000'
-        />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='56px'
-              h='56px'
-              bg='linear-gradient(90deg, #4481EB 0%, #04BEFE 100%)'
-              icon={<Icon w='28px' h='28px' as={MdAddTask} color='white' />}
-            />
-          }
-          name='New Tasks'
-          value='154'
-        />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='56px'
-              h='56px'
-              bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdFileCopy} color={brandColor} />
-              }
-            />
-          }
-          name='Total Projects'
-          value='2935'
-        />
-      </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px' mb='20px'>
-        <TotalSpent />
-        <WeeklyRevenue />
-      </SimpleGrid>
-      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-        <CheckTable columnsData={columnsDataCheck} tableData={tableDataCheck} />
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-          <DailyTraffic />
-          <PieCard />
-        </SimpleGrid>
-      </SimpleGrid>
-      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-        <ComplexTable
-          columnsData={columnsDataComplex}
-          tableData={tableDataComplex}
-        />
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-          <Tasks />
-          <MiniCalendar h='100%' minW='100%' selectRange={false} />
-        </SimpleGrid>
-      </SimpleGrid>
-    </Box>
-  );
-}
+            {/* Modal para Crear/Editar Eventos */}
+            <EventFormModal 
+                isOpen={isOpen} 
+                onClose={() => {
+                    onClose();
+                    setCurrentEvent(null);
+                }} 
+                currentEvent={currentEvent} 
+                fetchEvents={fetchEvents}
+                API_BASE_URL={API_BASE_URL} // Se pasa la URL sin la barra final
+            />
+
+            {events.length === 0 ? (
+                <Text>Aún no has creado ningún evento. ¡Empieza ahora!</Text>
+            ) : (
+                <Box overflowX="auto">
+                    <Table variant="simple">
+                        <Thead>
+                            <Tr>
+                                <Th>Título</Th>
+                                <Th>Categoría</Th>
+                                <Th>Inicio</Th>
+                                <Th>Público</Th>
+                                <Th>Acciones</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {events.map((event) => (
+                                <Tr key={event.id}>
+                                    <Td>{event.title}</Td>
+                                    <Td>{event.category_name || 'N/A'}</Td>
+                                    <Td>{moment(event.start_time).format('DD/MM/YYYY HH:mm')}</Td>
+                                    <Td>{event.is_public ? 'Sí' : 'No'}</Td>
+                                    <Td>
+                                        <Flex>
+                                            <Button 
+                                                size="sm" 
+                                                colorScheme="blue" 
+                                                onClick={() => handleOpenEdit(event)} 
+                                                mr={2}
+                                                leftIcon={<MdEdit />}
+                                            >
+                                                Editar
+                                            </Button>
+                                            <Button 
+                                                size="sm" 
+                                                colorScheme="red" 
+                                                onClick={() => handleDelete(event.id)}
+                                                leftIcon={<MdDelete />}
+                                            >
+                                                Eliminar
+                                            </Button>
+                                        </Flex>
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </Box>
+            )}
+        </Box>
+    );
+};
+
+export default EventTable;

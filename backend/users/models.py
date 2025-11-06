@@ -1,6 +1,11 @@
+# users/models.py
+
 import uuid
 from django.db import models
-from django.db.models import Q, F
+from django.contrib.auth import get_user_model 
+
+# Obtener el modelo de usuario activo de Django
+User = get_user_model() 
 
 
 class UserRole(models.TextChoices):
@@ -10,13 +15,25 @@ class UserRole(models.TextChoices):
 
 
 class Profile(models.Model):
-    id = models.UUIDField(primary_key=True)  # enlazable a auth.users(id) en Supabase
-    username = models.CharField(max_length=150, unique=True, null=True, blank=True)
-    full_name = models.CharField(max_length=255, null=True, blank=True)
-    avatar_url = models.URLField(null=True, blank=True)
-    bio = models.TextField(null=True, blank=True)
-    role = models.CharField(max_length=16, choices=UserRole.choices, default=UserRole.STUDENT)
+    # CRÍTICO: Enlace One-to-One al modelo User de Django.
+    # Esto permite que user.profile funcione y corrige los errores 500.
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="profile"
+    )
+    
+    # CAMPOS MANTENIDOS:
+    role = models.CharField(
+        max_length=16, 
+        choices=UserRole.choices, 
+        default=UserRole.STUDENT
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Campos eliminados: full_name, avatar_url, bio
 
     def __str__(self) -> str:
-        return self.username or f"Profile {self.id}"
+        # Usa el username del modelo User de Django
+        return self.user.username

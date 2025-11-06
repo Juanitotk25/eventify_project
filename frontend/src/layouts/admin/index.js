@@ -2,6 +2,7 @@
 import { Portal, Box, useDisclosure } from '@chakra-ui/react';
 import Footer from '../../components/footer/FooterUser.js';
 // Layout components
+import MainDashboard from 'views/admin/default';
 import Navbar from 'components/navbar/NavbarAdmin.js';
 import Sidebar from 'components/sidebar/Sidebar.js';
 import { SidebarContext } from 'contexts/SidebarContext';
@@ -158,15 +159,13 @@ export default function Dashboard(props) {
                 minH="100vh"
                 pt="50px"
               >
-                <Routes>
-                  {getRoutes(routes)}
-                  <Route
-                    path="/"
-                    element={<Navigate to="/user/dashboard" replace />}
-                  />
-                </Routes>
-              </Box>
-            ) : null}
+                {/* // 🚨 REEMPLAZO TEMPORAL DE TODAS LAS RUTAS 🚨 */}
+                <Routes>
+                  <Route path="/default" element={<MainDashboard />} />
+                </Routes>
+                {/* // 🚨 FIN DEL REEMPLAZO 🚨 */}
+              </Box>
+            ) : null}
             <Box>
               <Footer />
             </Box>
