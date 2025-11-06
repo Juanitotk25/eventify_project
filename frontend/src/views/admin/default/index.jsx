@@ -20,7 +20,7 @@ import EventFormModal from 'components/events/EventFormModal';
 // **********************************************
 // IMPORTANTE: REEMPLAZA ESTA URL CON TU ENDPOINT REAL
 // **********************************************
-const API_BASE_URL = 'http://localhost:8000/api/events'; 
+const API_BASE_URL = 'http://localhost:8000/api/events/'; 
 
 const EventTable = () => {
     const [events, setEvents] = useState([]);
