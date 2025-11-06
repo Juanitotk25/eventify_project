@@ -104,8 +104,8 @@ function SignIn() {
       const { access, refresh } = response.data;
       
       // 5. Almacenar los tokens de autenticación
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('access_token', response.data.access);
+      localStorage.setItem('refresh_token', response.data.refresh);
       
       // Mostrar notificación de éxito
       toast({
