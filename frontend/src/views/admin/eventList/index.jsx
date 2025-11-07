@@ -118,9 +118,6 @@ export default function EventList() {
             justifyContent="space-between"
             align={{ base: "start", md: "center" }}
           >
-            <Text fontSize="3xl" fontWeight="bold" mb={{ base: "4", md: "0" }}>
-              Lista de eventos
-            </Text>
     
             {/* Buscador */}
             <InputGroup maxW={{ base: "100%", md: "400px" }}>

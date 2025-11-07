@@ -22,6 +22,7 @@ import CreateEvent from "views/admin/createEvent";
 import SignInCentered from 'views/auth/signIn';
 import SignUpCentered from 'views/auth/signUp';
 import LandingPage from 'views/auth/landingPage';
+import NotFound from 'views/auth/notFound';
 
 const routes = [
   {
@@ -86,6 +87,27 @@ const routes = [
     path: '/rtl-default',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <RTL />,
+  },
+  {
+    name: 'Not Found',
+    layout: '/auth',
+    path: '*',
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <NotFound />,
+  },
+  {
+    name: 'Not Found',
+    layout: '/user',
+    path: '*',
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <NotFound />,
+  },
+  {
+    name: 'Not Found',
+    layout: '/rtl',
+    path: '*',
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <NotFound />,
   },
 ];
 

@@ -5,7 +5,6 @@ import Footer from '../../components/footer/FooterUser.js';
 import Navbar from 'components/navbar/NavbarAdmin.js';
 import Sidebar from 'components/sidebar/Sidebar.js';
 import { SidebarContext } from 'contexts/SidebarContext';
-import { useLocation } from "react-router-dom";
 import React, { useState } from 'react';
 import {Navigate, Route, Routes} from 'react-router-dom';
 import routes from 'routes.js';
@@ -20,9 +19,8 @@ export default function Dashboard(props) {
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
   };
-  const location = useLocation();
   const getActiveRoute = (routes) => {
-    let activeRoute = 'Default Brand Text';
+    let activeRoute = 'Página no encontrada';
     for (let i = 0; i < routes.length; i++) {
       if (routes[i].collapse) {
         let collapseActiveRoute = getActiveRoute(routes[i].items);

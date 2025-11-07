@@ -4,6 +4,7 @@ import {} from 'react-router-dom';
 import AuthLayout from './layouts/auth';
 import AdminLayout from './layouts/admin';
 import RTLLayout from './layouts/rtl';
+import NotFound from './views/auth/notFound';
 import {
   ChakraProvider,
   // extendTheme
@@ -32,6 +33,7 @@ export default function Main() {
           }
         />
         <Route path="/" element={<Navigate to="/auth" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ChakraProvider>
   );
