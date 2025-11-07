@@ -25,7 +25,7 @@ import axios from "axios";
 import moment from "moment";
 import { MdEdit, MdDelete, MdPeople } from 'react-icons/md';
 
-// 💡 IMPORTACIÓN CLAVE: Debes importar tu componente Modal aquí
+// IMPORTACIÓN CLAVE: Debes importar tu componente Modal aquí
 import EventFormModal from "components/events/EventFormModal"; // ¡Asegúrate de que esta ruta sea correcta!
 
 

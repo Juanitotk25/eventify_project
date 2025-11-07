@@ -2,16 +2,16 @@ import React from 'react';
 
 import { Icon } from '@chakra-ui/react';
 import {
-    MdBarChart,
-    MdPerson,
-    MdHome,
-    MdLock,
-    MdEvent,
-    MdAddCircle
+  MdBarChart,
+  MdPerson,
+  MdHome,
+  MdLock,
+  MdEvent,
+  MdAddCircle
 } from 'react-icons/md';
 
 // Admin Imports
-//import MainDashboard from 'views/admin/default';
+import MainDashboard from 'views/admin/default';
 import Profile from 'views/admin/profile';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
@@ -24,75 +24,70 @@ import SignUpCentered from 'views/auth/signUp';
 import LandingPage from 'views/auth/landingPage';
 
 const routes = [
-    // CAMBIO 1: La ruta de la Lista de Eventos ahora usa el path raíz ('/') 
-    // de su layout '/user', lo que la convierte en la página de inicio.
-    {
-        name: "Lista de eventos",
-        layout: "/user",
-        path: "/", // CAMBIO CLAVE: Usamos '/' para que sea la página principal
-        icon: <Icon as={MdEvent} width="20px" height="20px" color="inherit" />,
-        component: <EventList />,
-    },
-    {
-        name: "Crear Evento",
-        layout: "/user",
-        // Mantenemos esta ruta específica, ya que la anterior toma el '/'
-        path: "/create-event", 
-        icon: <Icon as={MdAddCircle} width="20px" height="20px" color="inherit" />,
-        component: <CreateEvent />,
-    },
-    // CAMBIO 2: ELIMINAMOS la entrada del Main Dashboard
-    /*
-    {
-        name: 'Main Dashboard',
-        layout: '/user',
-        path: '/dashboard',
-        icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-        component: <MainDashboard />,
-    },
-    */
-    {
-        name: "Landing Page",
-        layout: "/auth",
-        path: "/home",
-        icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-        component: <LandingPage />,
-    },
-    {
-        name: 'Data Tables',
-        layout: '/user',
-        icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-        path: '/data-tables',
-        component: <DataTables />,
-    },
-    {
-        name: 'Profile',
-        layout: '/user',
-        path: '/profile',
-        icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-        component: <Profile />,
-    },
-    {
-        name: 'Sign In',
-        layout: '/auth',
-        path: '/sign-in',
-        icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-        component: <SignInCentered />,
-    },
-    {
-        name: 'Sign Up',
-        layout: '/auth',
-        path: '/sign-up',
-        icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-        component: <SignUpCentered />,
-    },
-    {
-        name: 'RTL Admin',
-        layout: '/rtl',
-        path: '/rtl-default',
-        icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-        component: <RTL />,
-    },
+  {
+    name: "Lista de eventos",
+    layout: "/user",
+    path: "/event-list",
+    icon: <Icon as={MdEvent} width="20px" height="20px" color="inherit" />,
+    component: <EventList />,
+  },
+  {
+    name: "Crear Evento",
+    layout: "/user",
+    path: "/create-event",
+    icon: <Icon as={MdAddCircle} width="20px" height="20px" color="inherit" />,
+    component: <CreateEvent />,
+  },
+  {
+    name: 'Main Dashboard',
+    layout: '/user',
+    path: '/dashboard',
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <MainDashboard />,
+    sidebar: false,
+  },
+  {
+    name: "Landing Page",
+    layout: "/auth",
+    path: "/home",
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <LandingPage />,
+  },
+  {
+    name: 'Data Tables',
+    layout: '/user',
+    icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
+    path: '/data-tables',
+    component: <DataTables />,
+  },
+  {
+    name: 'Profile',
+    layout: '/user',
+    path: '/profile',
+    icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+    component: <Profile />,
+  },
+  {
+    name: 'Sign In',
+    layout: '/auth',
+    path: '/sign-in',
+    icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
+    component: <SignInCentered />,
+  },
+  {
+    name: 'Sign Up',
+    layout: '/auth',
+    path: '/sign-up',
+    icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
+    component: <SignUpCentered />,
+  },
+  {
+    name: 'RTL Admin',
+    layout: '/rtl',
+    path: '/rtl-default',
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    component: <RTL />,
+  },
 ];
 
 export default routes;
