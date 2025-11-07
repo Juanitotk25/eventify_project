@@ -1,25 +1,3 @@
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Horizon UI - v1.1.0
-=========================================================
-
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Horizon UI (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
 import React, { useEffect, useRef, useState } from "react";
 
 // Chakra imports
@@ -35,7 +13,9 @@ import {
     Button,
     IconButton,
     useColorModeValue,
-  } from "@chakra-ui/react";
+    useToast,
+    Tag,
+} from "@chakra-ui/react";
 
 
 // Custom components
@@ -43,17 +23,45 @@ import { SearchIcon } from "@chakra-ui/icons";
 import Card from "components/card/Card.js";
 import axios from "axios";
 import moment from "moment";
+import { MdEdit, MdDelete, MdPeople } from 'react-icons/md';
+
+// IMPORTACIÓN CLAVE: Debes importar tu componente Modal aquí
+import EventFormModal from "components/events/EventFormModal"; // ¡Asegúrate de que esta ruta sea correcta!
+
+
+// MAPEO DE CATEGORÍAS
+const CATEGORY_MAP = {
+    4: "Académico",
+    5: "Cultural",
+    6: "Deportivo",
+    7: "Social",
+    8: "Networking",
+};
+
+const getCategoryName = (id) => {
+    if (typeof id === 'string' && id.length > 0) {
+        return id.charAt(0).toUpperCase() + id.slice(1);
+    }
+    return CATEGORY_MAP[id] || "General";
+};
+
 
 export default function EventList() {
-  const [search, setSearch] = useState("");
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const abortRef = useRef(null);
+    const [search, setSearch] = useState("");
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    // ESTADOS NUEVOS PARA EL MODAL DE EDICIÓN
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    // FIN DE ESTADOS NUEVOS
+
+    const abortRef = useRef(null);
+    const toast = useToast();
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const cardBg = useColorModeValue("white", "navy.700");
-    
-    // Search bar colors matching Horizon UI SearchBar
+
     const searchIconColor = useColorModeValue("gray.700", "white");
     const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
     const inputText = useColorModeValue("gray.700", "gray.100");
@@ -61,47 +69,83 @@ export default function EventList() {
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
 
     const fetchEvents = async (query) => {
-      // Cancel previous request if any
-      if (abortRef.current) abortRef.current.abort();
-      abortRef.current = new AbortController();
+        if (abortRef.current) abortRef.current.abort();
+        abortRef.current = new AbortController();
 
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setEvents([]);
-        setError("No estás autenticado. Inicia sesión para ver tus eventos.");
-        return;
-      }
-      setLoading(true);
-      setError("");
-      try {
-        const params = {};
-        if (query && query.trim()) params.search = query.trim();
-        const res = await axios.get(`${API_BASE}/api/events/`, {
-          params,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: abortRef.current.signal,
-        });
-        setEvents(Array.isArray(res.data) ? res.data : res.data.results || []);
-      } catch (err) {
-        if (!axios.isCancel(err)) {
-          const msg = err.response?.data?.detail || "Error cargando eventos";
-          setError(msg);
-          setEvents([]);
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setEvents([]);
+            setError("No estás autenticado. Inicia sesión para ver tus eventos.");
+            return;
         }
-      } finally {
-        setLoading(false);
-      }
+        setLoading(true);
+        setError("");
+        try {
+            const params = {};
+            if (query && query.trim()) params.search = query.trim();
+            const res = await axios.get(`${API_BASE}/api/events/`, {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                signal: abortRef.current.signal,
+            });
+            setEvents(Array.isArray(res.data) ? res.data : res.data.results || []);
+        } catch (err) {
+            if (!axios.isCancel(err)) {
+                const msg = err.response?.data?.detail || "Error cargando eventos";
+                setError(msg);
+                setEvents([]);
+                toast({ title: "Error de Carga", description: msg, status: "error", duration: 5000, isClosable: true });
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Initial load
+    // NUEVA FUNCIÓN: Abre el modal y guarda el objeto del evento
+    const handleOpenEdit = (eventObject) => {
+        setSelectedEvent(eventObject); // Guarda el objeto completo
+        setIsModalOpen(true);          // Abre el modal
+    };
+
+    // NUEVA FUNCIÓN: Cierra el modal y limpia el estado de edición
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedEvent(null);
+    };
+
+    // Ya que el botón estaba llamando a `handleEdit`, la reescribimos para usar el modal:
+    const handleEdit = (eventObject) => {
+         handleOpenEdit(eventObject);
+    };
+    // NOTA: Para evitar confusión, lo ideal es cambiar el nombre en el botón a handleOpenEdit, pero lo mantengo así para que la refencia del botón de abajo funcione sin cambiar el nombre de la variable.
+
+    const handleDelete = async (eventId) => {
+        if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
+
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        try {
+            await axios.delete(`${API_BASE}/api/events/${eventId}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            toast({ title: 'Evento Eliminado', description: 'El evento fue eliminado correctamente.', status: 'success', duration: 3000, isClosable: true });
+            fetchEvents(search);
+
+        } catch (err) {
+            const msg = err.response?.data?.detail || "Fallo al eliminar el evento.";
+            toast({ title: 'Error de Eliminación', description: msg, status: 'error', duration: 5000, isClosable: true });
+        }
+    };
+
     useEffect(() => {
       fetchEvents("");
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Debounced search
     useEffect(() => {
       const id = setTimeout(() => {
         fetchEvents(search);
@@ -110,95 +154,124 @@ export default function EventList() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
     
-      return (
+    return (
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            mb="8"
-            justifyContent="space-between"
-            align={{ base: "start", md: "center" }}
-          >
-    
-            {/* Buscador */}
-            <InputGroup maxW={{ base: "100%", md: "400px" }}>
-              <InputLeftElement
-                children={
-                  <IconButton
-                    bg='inherit'
-                    borderRadius='inherit'
-                    _hover='none'
-                    _active={{
-                      bg: "inherit",
-                      transform: "none",
-                      borderColor: "transparent",
-                    }}
-                    _focus={{
-                      boxShadow: "none",
-                    }}
-                    icon={
-                      <SearchIcon color={searchIconColor} w='15px' h='15px' />
-                    }></IconButton>
-                }
-              />
-              <Input
-                variant='search'
-                fontSize='sm'
-                bg={inputBg}
-                color={inputText}
-                fontWeight='500'
-                _placeholder={{ color: "gray.400", fontSize: "14px" }}
-                borderRadius="30px"
-                placeholder="Buscar evento..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </InputGroup>
-          </Flex>
-    
-          {/* Estado de carga / error */}
-          {loading && <Text color="gray.500" mb="4">Cargando eventos...</Text>}
-          {error && !loading && <Text color="red.400" mb="4">{error}</Text>}
+            {/* ... (Encabezado y buscador) ... */}
 
-          {/* Lista de eventos */}
-          <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
-            {events.map((event) => (
-              <Card
-                key={event.id}
-                p="20px"
-                bg={cardBg}
-                borderRadius="2xl"
-                boxShadow="md"
-              >
-                <Image
-                  src={event.cover_url || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800"}
-                  alt={event.title}
-                  borderRadius="xl"
-                  h="180px"
-                  w="100%"
-                  objectFit="cover"
-                  mb="4"
+            <InputGroup mb="20px" borderRadius="15px" w={{ base: "100%", md: "300px" }}>
+                <InputLeftElement
+                    children={
+                        <IconButton
+                            bg="inherit"
+                            borderRadius="inherit"
+                            _hover="none"
+                            _active={{ bg: "inherit" }}
+                            _focus={{ bg: "inherit" }}
+                            icon={<SearchIcon color={searchIconColor} w="15px" h="15px" />}
+                        />
+                    }
                 />
-                <Text fontSize="xl" fontWeight="700" color={textColor}>
-                  {event.title}
-                </Text>
-                <Text color="gray.500" fontSize="sm" mb="1">
-                  {event.start_time ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
-                </Text>
-                <Text fontSize="sm" mb="3" color={textColor}>
-                  {event.description || "Sin descripción"}
-                </Text>
-                <Flex justify="flex-end">
-                  <Button colorScheme="blue" size="sm">
-                    Ver más
-                  </Button>
-                </Flex>
-              </Card>
-            ))}
-          </SimpleGrid>
+                <Input
+                    type="text"
+                    placeholder="Buscar evento por título o ubicación..."
+                    bg={inputBg}
+                    color={inputText}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    variant="search"
+                    h="44px"
+                    borderRadius="inherit"
+                />
+            </InputGroup>
+    
+            {loading && <Text color="gray.500" mb="4">Cargando eventos...</Text>}
+            {error && !loading && <Text color="red.400" mb="4">{error}</Text>}
 
-          {!loading && !error && events.length === 0 && (
-            <Text color="gray.500" mt="6">No se encontraron eventos.</Text>
-          )}
+            {/* Lista de eventos */}
+            <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
+                {events.map((event) => (
+                    <Card
+                        key={event.id}
+                        p="20px"
+                        bg={cardBg}
+                        borderRadius="2xl"
+                        boxShadow="md"
+                    >
+                        <Image
+                            src={event.cover_url || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800"}
+                            alt={event.title}
+                            borderRadius="xl"
+                            h="180px"
+                            w="100%"
+                            objectFit="cover"
+                            mb="4"
+                        />
+
+                        <Flex justify="space-between" align="center" mb="2">
+                            <Tag
+                                size="sm"
+                                colorScheme="brand"
+                                fontWeight="bold"
+                            >
+                                {getCategoryName(event.category)}
+                            </Tag>
+
+                            <Flex align="center">
+                                <Box as={MdPeople} color="gray.500" mr="1" />
+                                <Text color="gray.500" fontSize="sm" fontWeight="bold">
+                                    {event.capacity || "N/A"} personas
+                                </Text>
+                            </Flex>
+                        </Flex>
+
+                        <Text fontSize="xl" fontWeight="700" color={textColor}>
+                            {event.title}
+                        </Text>
+
+                        <Text color="gray.500" fontSize="sm" mb="1">
+                            {event.start_time ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
+                        </Text>
+                        <Text fontSize="sm" mb="3" color={textColor}>
+                            {event.description || "Sin descripción"}
+                        </Text>
+
+                        {/* Botones de Acción */}
+                        <Flex justify="flex-end" gap="10px" mt="3">
+                            <Button
+                                colorScheme="blue"
+                                size="sm"
+                                leftIcon={<MdEdit />}
+                                // CORRECCIÓN CLAVE: Ahora llama a handleEdit/handleOpenEdit
+                                // y le pasa el OBJETO COMPLETO 'event'
+                                onClick={() => handleEdit(event)}
+                            >
+                                Editar
+                            </Button>
+                            <Button
+                                colorScheme="red"
+                                size="sm"
+                                leftIcon={<MdDelete />}
+                                onClick={() => handleDelete(event.id)}
+                            >
+                                Eliminar
+                            </Button>
+                        </Flex>
+                    </Card>
+                ))}
+            </SimpleGrid>
+
+            {!loading && !error && events.length === 0 && (
+                <Text color="gray.500" mt="6">No se encontraron eventos.</Text>
+            )}
+
+            {/* AÑADIR EL MODAL AQUÍ */}
+            <EventFormModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                currentEvent={selectedEvent} // Pasa el objeto seleccionado
+                fetchEvents={() => fetchEvents(search)} // Pasa la función para recargar la lista
+            />
+
         </Box>
-      );
-    }
+    );
+}
