@@ -7,6 +7,7 @@ import Sidebar from 'components/sidebar/Sidebar.js';
 import { SidebarContext } from 'contexts/SidebarContext';
 import React, { useState } from 'react';
 import {Navigate, Route, Routes} from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import routes from 'routes.js';
 
 // Custom Chakra theme
@@ -16,10 +17,11 @@ export default function Dashboard(props) {
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
   // functions for changing the states from components
+  const location = useLocation();
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
   };
-  const getActiveRoute = (routes) => {
+  const getActiveRoute = (routes, pathname) => {
     let activeRoute = 'Página no encontrada';
     for (let i = 0; i < routes.length; i++) {
       if (routes[i].collapse) {
@@ -33,16 +35,14 @@ export default function Dashboard(props) {
           return categoryActiveRoute;
         }
       } else {
-        if (
-          window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
-        ) {
+        if(pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
           return routes[i].name;
         }
       }
     }
     return activeRoute;
   };
-  const getActiveNavbar = (routes) => {
+  const getActiveNavbar = (routes, pathname) => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
       if (routes[i].collapse) {
@@ -56,16 +56,14 @@ export default function Dashboard(props) {
           return categoryActiveNavbar;
         }
       } else {
-        if (
-          window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
-        ) {
+        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
           return routes[i].secondary;
         }
       }
     }
     return activeNavbar;
   };
-  const getActiveNavbarText = (routes) => {
+  const getActiveNavbarText = (routes, pathname) => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
       if (routes[i].collapse) {
@@ -79,9 +77,7 @@ export default function Dashboard(props) {
           return categoryActiveNavbar;
         }
       } else {
-        if (
-          window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
-        ) {
+        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
           return routes[i].messageNavbar;
         }
       }
@@ -138,9 +134,9 @@ export default function Dashboard(props) {
                 <Navbar
                   onOpen={onOpen}
                   logoText={'Eventify!'}
-                  brandText={getActiveRoute(routes)}
-                  secondary={getActiveNavbar(routes)}
-                  message={getActiveNavbarText(routes)}
+                  brandText={getActiveRoute(routes, location.pathname)}
+                  secondary={getActiveNavbar(routes, location.pathname)}
+                  message={getActiveNavbarText(routes, location.pathname)}
                   fixed={fixed}
                   {...rest}
                 />
