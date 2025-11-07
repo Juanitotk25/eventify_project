@@ -29,6 +29,7 @@ import routes from 'routes';
 export default function HeaderLinks(props) {
   const { secondary } = props;
   const { colorMode, toggleColorMode } = useColorMode();
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
   // Chakra Color Mode
   const navbarIcon = useColorModeValue('gray.400', 'white');
   let menuBg = useColorModeValue('white', 'navy.800');
@@ -63,6 +64,24 @@ export default function HeaderLinks(props) {
         }}
         me="10px"
         borderRadius="30px"
+        onSearch={async (query) => {
+          try {
+            if (!query.trim()) return; // no empty searches
+            console.log("Searching for:", query);
+
+            // Fetch events (adjust URL to your backend)
+            const response = await fetch(`${API_BASE}/api/events/?q=${encodeURIComponent(query)}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            console.log("Search results:", data);
+
+            // Example: if you want to display the results later
+            // you could lift this state up to a parent component.
+          } catch (error) {
+            console.error("Error fetching events:", error);
+          }
+        }}
       />
       <Flex
         bg={ethBg}
