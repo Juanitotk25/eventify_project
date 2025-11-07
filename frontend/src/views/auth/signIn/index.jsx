@@ -117,7 +117,7 @@ function SignIn() {
       });
 
       // 6. Redirigir al dashboard (Ruta por defecto del dashboard de Horizon UI)
-      navigate('/admin/default');
+      navigate('/user/dashboard');
 
     } catch (error) {
       // 7. Manejo de errores
@@ -180,7 +180,6 @@ function SignIn() {
           direction='column'
           w={{ base: "100%", md: "420px" }}
           maxW='100%'
-          background='transparent'
           borderRadius='15px'
           mx={{ base: "auto", lg: "unset" }}
           me='auto'

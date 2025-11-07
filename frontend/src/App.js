@@ -20,7 +20,7 @@ export default function Main() {
       <Routes>
         <Route path="auth/*" element={<AuthLayout theme={currentTheme} setTheme={setCurrentTheme} />} />
         <Route
-          path="admin/*"
+          path="user/*"
           element={
             <AdminLayout theme={currentTheme} setTheme={setCurrentTheme} />
           }

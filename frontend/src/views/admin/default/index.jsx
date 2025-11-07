@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { 
     Box, 
     Button, 
@@ -37,7 +37,7 @@ const EventTable = () => {
     // **********************************************
     // FUNCIÓN CENTRAL: OBTENER DATOS DE LA API (GET)
     // **********************************************
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         setIsLoading(true);
         const token = localStorage.getItem('access_token');
         
@@ -85,11 +85,11 @@ const EventTable = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [toast]);
 
     useEffect(() => {
         fetchEvents();
-    }, []); 
+    }, [fetchEvents]);
 
     // **********************************************
     // MANEJO DE ACCIONES
@@ -127,7 +127,7 @@ const EventTable = () => {
                     duration: 3000,
                     isClosable: true,
                 });
-                fetchEvents(); // Recargar la lista
+                await fetchEvents(); // Recargar la lista
             } else if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || `Error ${response.status}: Fallo al eliminar.`);
@@ -159,7 +159,7 @@ const EventTable = () => {
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
             <Flex justify="space-between" align="center" mb="30px">
                 <Text fontSize="2xl" fontWeight="bold">
-                    Panel de Eventos
+                    Tus Eventos
                 </Text>
                 
                 <Button
