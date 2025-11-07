@@ -99,8 +99,14 @@ export default function Dashboard(props) {
     });
   };
   const getSidebarRoutes = (routes) => {
-    return routes.filter((r) => r.layout === '/user' || r.collapse)
-        .map((r) => r.collapse ? { ...r, items: getSidebarRoutes(r.items) } : r);
+    return routes
+        .filter((r) =>
+            (r.layout === '/user' || r.collapse) &&
+            r.path !== '*'
+        )
+        .map((r) =>
+            r.collapse ? { ...r, items: getSidebarRoutes(r.items) } : r
+        );
   };
   document.documentElement.dir = 'ltr';
   const { onOpen } = useDisclosure();
