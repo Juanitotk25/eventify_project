@@ -20,7 +20,7 @@
 
 */
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // Chakra imports
 import {
@@ -41,9 +41,15 @@ import {
 // Custom components
 import { SearchIcon } from "@chakra-ui/icons";
 import Card from "components/card/Card.js";
+import axios from "axios";
+import moment from "moment";
 
 export default function EventList() {
-    const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const abortRef = useRef(null);
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const cardBg = useColorModeValue("white", "navy.700");
     
@@ -52,35 +58,57 @@ export default function EventList() {
     const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
     const inputText = useColorModeValue("gray.700", "gray.100");
 
-    const events = [
-        {
-          id: 1,
-          title: "Taller de Inteligencia Artificial",
-          date: "5 de Noviembre, 2025",
-          location: "Auditorio Central",
-          description: "Aprende a crear modelos de IA con Python.",
-          image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800",
-        },
-        {
-          id: 2,
-          title: "Festival Universitario de Música",
-          date: "12 de Noviembre, 2025",
-          location: "Plaza Principal",
-          description: "Conciertos, comidas y actividades culturales.",
-          image: "https://images.unsplash.com/photo-1504805572947-34fad45aed93?w=800",
-        },
-        {
-          id: 3,
-          title: "Torneo de Ajedrez",
-          date: "20 de Noviembre, 2025",
-          location: "Sala 204 - Bloque B",
-          description: "Participa y demuestra tus habilidades mentales.",
-          image: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800",
-        },
-      ];
-      const filtered = events.filter((e) =>
-        e.title.toLowerCase().includes(search.toLowerCase())
-      );
+    const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+
+    const fetchEvents = async (query) => {
+      // Cancel previous request if any
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
+
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setEvents([]);
+        setError("No estás autenticado. Inicia sesión para ver tus eventos.");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        const params = {};
+        if (query && query.trim()) params.search = query.trim();
+        const res = await axios.get(`${API_BASE}/api/events/`, {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: abortRef.current.signal,
+        });
+        setEvents(Array.isArray(res.data) ? res.data : res.data.results || []);
+      } catch (err) {
+        if (!axios.isCancel(err)) {
+          const msg = err.response?.data?.detail || "Error cargando eventos";
+          setError(msg);
+          setEvents([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Initial load
+    useEffect(() => {
+      fetchEvents("");
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Debounced search
+    useEffect(() => {
+      const id = setTimeout(() => {
+        fetchEvents(search);
+      }, 400);
+      return () => clearTimeout(id);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
     
       return (
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
@@ -130,9 +158,13 @@ export default function EventList() {
             </InputGroup>
           </Flex>
     
+          {/* Estado de carga / error */}
+          {loading && <Text color="gray.500" mb="4">Cargando eventos...</Text>}
+          {error && !loading && <Text color="red.400" mb="4">{error}</Text>}
+
           {/* Lista de eventos */}
           <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
-            {filtered.map((event) => (
+            {events.map((event) => (
               <Card
                 key={event.id}
                 p="20px"
@@ -141,7 +173,7 @@ export default function EventList() {
                 boxShadow="md"
               >
                 <Image
-                  src={event.image}
+                  src={event.cover_url || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800"}
                   alt={event.title}
                   borderRadius="xl"
                   h="180px"
@@ -153,10 +185,10 @@ export default function EventList() {
                   {event.title}
                 </Text>
                 <Text color="gray.500" fontSize="sm" mb="1">
-                  {event.date} • {event.location}
+                  {event.start_time ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
                 </Text>
                 <Text fontSize="sm" mb="3" color={textColor}>
-                  {event.description}
+                  {event.description || "Sin descripción"}
                 </Text>
                 <Flex justify="flex-end">
                   <Button colorScheme="blue" size="sm">
@@ -166,6 +198,10 @@ export default function EventList() {
               </Card>
             ))}
           </SimpleGrid>
+
+          {!loading && !error && events.length === 0 && (
+            <Text color="gray.500" mt="6">No se encontraron eventos.</Text>
+          )}
         </Box>
       );
     }
