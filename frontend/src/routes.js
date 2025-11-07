@@ -40,12 +40,11 @@ const routes = [
     component: <CreateEvent />,
   },
   {
-    name: 'Main Dashboard',
+    name: 'Tus Eventos',
     layout: '/user',
     path: '/dashboard',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <MainDashboard />,
-    sidebar: false,
   },
   {
     name: "Landing Page",

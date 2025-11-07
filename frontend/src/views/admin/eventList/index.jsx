@@ -10,7 +10,6 @@ import {
     Flex,
     Text,
     Image,
-    Button,
     IconButton,
     useColorModeValue,
     useToast,
@@ -23,7 +22,7 @@ import { SearchIcon } from "@chakra-ui/icons";
 import Card from "components/card/Card.js";
 import axios from "axios";
 import moment from "moment";
-import { MdEdit, MdDelete, MdPeople } from 'react-icons/md';
+import { MdPeople } from 'react-icons/md';
 
 // IMPORTACIÓN CLAVE: Debes importar tu componente Modal aquí
 import EventFormModal from "components/events/EventFormModal"; // ¡Asegúrate de que esta ruta sea correcta!
@@ -104,10 +103,10 @@ export default function EventList() {
     };
 
     // NUEVA FUNCIÓN: Abre el modal y guarda el objeto del evento
-    const handleOpenEdit = (eventObject) => {
-        setSelectedEvent(eventObject); // Guarda el objeto completo
-        setIsModalOpen(true);          // Abre el modal
-    };
+    // const handleOpenEdit = (eventObject) => {
+    //     setSelectedEvent(eventObject); // Guarda el objeto completo
+    //     setIsModalOpen(true);          // Abre el modal
+    // };
 
     // NUEVA FUNCIÓN: Cierra el modal y limpia el estado de edición
     const handleCloseModal = () => {
@@ -116,30 +115,30 @@ export default function EventList() {
     };
 
     // Ya que el botón estaba llamando a `handleEdit`, la reescribimos para usar el modal:
-    const handleEdit = (eventObject) => {
-         handleOpenEdit(eventObject);
-    };
-    // NOTA: Para evitar confusión, lo ideal es cambiar el nombre en el botón a handleOpenEdit, pero lo mantengo así para que la refencia del botón de abajo funcione sin cambiar el nombre de la variable.
-
-    const handleDelete = async (eventId) => {
-        if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
-
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
-
-        try {
-            await axios.delete(`${API_BASE}/api/events/${eventId}/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            toast({ title: 'Evento Eliminado', description: 'El evento fue eliminado correctamente.', status: 'success', duration: 3000, isClosable: true });
-            fetchEvents(search);
-
-        } catch (err) {
-            const msg = err.response?.data?.detail || "Fallo al eliminar el evento.";
-            toast({ title: 'Error de Eliminación', description: msg, status: 'error', duration: 5000, isClosable: true });
-        }
-    };
+    // const handleEdit = (eventObject) => {
+    //      handleOpenEdit(eventObject);
+    // };
+    // // NOTA: Para evitar confusión, lo ideal es cambiar el nombre en el botón a handleOpenEdit, pero lo mantengo así para que la refencia del botón de abajo funcione sin cambiar el nombre de la variable.
+    //
+    // const handleDelete = async (eventId) => {
+    //     if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
+    //
+    //     const token = localStorage.getItem("access_token");
+    //     if (!token) return;
+    //
+    //     try {
+    //         await axios.delete(`${API_BASE}/api/events/${eventId}/`, {
+    //             headers: { Authorization: `Bearer ${token}` },
+    //         });
+    //
+    //         toast({ title: 'Evento Eliminado', description: 'El evento fue eliminado correctamente.', status: 'success', duration: 3000, isClosable: true });
+    //         fetchEvents(search);
+    //
+    //     } catch (err) {
+    //         const msg = err.response?.data?.detail || "Fallo al eliminar el evento.";
+    //         toast({ title: 'Error de Eliminación', description: msg, status: 'error', duration: 5000, isClosable: true });
+    //     }
+    // };
 
     useEffect(() => {
       fetchEvents("");
@@ -235,28 +234,6 @@ export default function EventList() {
                         <Text fontSize="sm" mb="3" color={textColor}>
                             {event.description || "Sin descripción"}
                         </Text>
-
-                        {/* Botones de Acción */}
-                        <Flex justify="flex-end" gap="10px" mt="auto">
-                            <Button
-                                colorScheme="blue"
-                                size="sm"
-                                leftIcon={<MdEdit />}
-                                // CORRECCIÓN CLAVE: Ahora llama a handleEdit/handleOpenEdit
-                                // y le pasa el OBJETO COMPLETO 'event'
-                                onClick={() => handleEdit(event)}
-                            >
-                                Editar
-                            </Button>
-                            <Button
-                                colorScheme="red"
-                                size="sm"
-                                leftIcon={<MdDelete />}
-                                onClick={() => handleDelete(event.id)}
-                            >
-                                Eliminar
-                            </Button>
-                        </Flex>
                     </Card>
                 ))}
             </SimpleGrid>

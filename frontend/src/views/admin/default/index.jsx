@@ -82,6 +82,7 @@ export default function EventList() {
         setError("");
         try {
             const params = {};
+            params.mine = 'true'
             if (query && query.trim()) params.search = query.trim();
             const res = await axios.get(`${API_BASE}/api/events/`, {
                 params,
@@ -236,7 +237,7 @@ export default function EventList() {
                         </Text>
                         
                         {/* Botones de Acción */}
-                        <Flex justify="flex-end" gap="10px" mt="3">
+                        <Flex justify="flex-end" gap="10px" mt="auto">
                             <Button 
                                 colorScheme="blue" 
                                 size="sm" 
