@@ -3,6 +3,7 @@ import { Box, Flex, Heading, Text, Button, Image } from "@chakra-ui/react";
 import {NavLink, useNavigate} from "react-router-dom";
 import AuthFooter from "components/footer/FooterAuth";
 import banner from "assets/img/auth/landing-banner.avif";
+import logo from "assets/img/logo_icon.png"
 import {HSeparator} from "../../../components/separator/Separator";
 
 export default function LandingPage() {
@@ -32,7 +33,6 @@ export default function LandingPage() {
                 direction={{ base: "column", md: "row" }}
                 align="center"
                 justify="center"
-                gap={10}
                 zIndex={2}
                 position="absolute"
                 top="45%"
@@ -49,13 +49,21 @@ export default function LandingPage() {
                     display="flex"
                     justifyContent="center">
 
-                        <Box display="flex" flexDirection="column" alignItems="center"
-                             justifyContent="center" my="10vh" mx="10vw" textAlign="center">
+                        <Box display="flex" flexDirection="column" alignItems="center" gap={4}
+                             justifyContent="center" my="4vh" mx="10vw" textAlign="center">
+                            <Flex direction="row" gap={5} alignItems="flex-end"
+                                  justifyContent="space-between">
+                                <Image
+                                    src={logo}
+                                    alt="Logo Eventify"
+                                    style={{ width: "12vw", height: "auto" }}
+                                />
                             <Heading fontSize="5em" size="2xl" minH="15vh" minW="25vw" maxW="40vw" mb={4} fontWeight="extrabold"
                                      bgGradient="linear(to-r, blue.200, purple.200)"
                                      bgClip="text">
                                 Eventify
                             </Heading>
+                            </Flex>
                             <Heading as="h1" size="2xl" maxW="40vw" mb={4} fontWeight="extrabold">
                                 ¡No te perdás ni una!
                             </Heading>

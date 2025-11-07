@@ -1,5 +1,5 @@
 // Chakra imports
-import { Box, Flex, Icon, Text } from "@chakra-ui/react";
+import {Box, Flex, Heading, Icon, Image, Text} from "@chakra-ui/react";
 import PropTypes from "prop-types";
 import React from "react";
 import Footer from "components/footer/FooterAuth";
@@ -60,16 +60,28 @@ function AuthIllustration(props) {
               position='absolute'
               right='0px'>
               <Flex
-                  bg={`url(${illustrationBackground})`}
+                  bgGradient="linear(to-br, blue.400, purple.600)"
                   justify='center'
-                  align='end'
+                  direction='column'
+                  align='center'
                   w='100%'
                   h='100%'
                   minH='100vh'
                   bgSize='cover'
                   bgPosition='50%'
                   position='absolute'
-                  borderBottomLeftRadius={{ lg: "200px", xl: "200px" }}></Flex>
+                  borderBottomLeftRadius={{ lg: "200px", xl: "200px" }}>
+                  <Image
+                      src={illustrationBackground}
+                      alt="Logo Eventify"
+                      style={{ width: "30vw", height: "auto" }}
+                  />
+                  <Heading fontSize="5em" size="2xl" minH="15vh" minW="25vw" maxW="40vw" mb={4} fontWeight="extrabold"
+                           bgGradient="linear(to-r, blue.200, purple.200)"
+                           bgClip="text">
+                      Eventify
+                  </Heading>
+              </Flex>
           </Box>
         <Footer />
       </Flex>

@@ -1,19 +1,24 @@
 import React from "react";
 
 // Chakra imports
-import { Flex, useColorModeValue } from "@chakra-ui/react";
+import {Flex, Image, useColorModeValue} from "@chakra-ui/react";
 
 // Custom components
-import { HorizonLogo } from "components/icons/Icons";
+import brandLogoLight from "assets/img/bannerLogo.png"
+import brandLogoDark from "assets/img/bannerLogoDark.png"
 import { HSeparator } from "components/separator/Separator";
 
 export function SidebarBrand() {
-  //   Chakra color mode
-  let logoColor = useColorModeValue("navy.700", "white");
+  //
+  let logoMode = useColorModeValue(brandLogoLight,brandLogoDark );
 
   return (
     <Flex align='center' direction='column'>
-      <HorizonLogo h='26px' w='175px' my='32px' color={logoColor} />
+        <Image
+            src={logoMode}
+            alt="Logo Eventify"
+            style={{ width: "20vw", height: "auto" }}
+        />
       <HSeparator mb='20px' />
     </Flex>
   );
