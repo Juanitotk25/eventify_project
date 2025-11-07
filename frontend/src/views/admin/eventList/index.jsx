@@ -168,12 +168,13 @@ export default function EventList() {
                             _active={{ bg: "inherit" }}
                             _focus={{ bg: "inherit" }}
                             icon={<SearchIcon color={searchIconColor} w="15px" h="15px" />}
+                            onClick={() => fetchEvents(search)}
                         />
                     }
                 />
                 <Input
                     type="text"
-                    placeholder="Buscar evento por título o ubicación..."
+                    placeholder="Busca un evento..."
                     bg={inputBg}
                     color={inputText}
                     value={search}

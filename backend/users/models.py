@@ -2,7 +2,10 @@
 
 import uuid
 from django.db import models
-from django.contrib.auth import get_user_model 
+from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
 
 # Obtener el modelo de usuario activo de Django
 User = get_user_model() 
@@ -37,3 +40,9 @@ class Profile(models.Model):
     def __str__(self) -> str:
         # Usa el username del modelo User de Django
         return self.user.username
+
+
+@receiver(post_save, sender=get_user_model())
+def create_profile_for_new_user(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)

@@ -8,8 +8,6 @@ import {
     ModalHeader,
     ModalBody,
     ModalCloseButton,
-    ModalFooter, // Podrías no necesitarlo si los botones están en el Form
-    Button,
     Box
 } from '@chakra-ui/react';
 
