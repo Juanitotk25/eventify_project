@@ -80,8 +80,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
             setIsSubmitting(false);
             return;
         }
-        
-        // 3. Determinar método y URL
+
         const isEditing = !!initialEvent;
         const method = isEditing ? 'PUT' : 'POST';
         // Si editamos: /api/events/ID/, si creamos: /api/events/

@@ -46,6 +46,7 @@ export default function Footer() {
                     <Link
                         mx='3px'
                         color={textColor}
+                        _hover={{ color: "purple.500" }}
                         href='https://github.com/horizon-ui/horizon-ui-chakra'
                         target='_blank'
                         fontWeight='700'>
@@ -59,6 +60,7 @@ export default function Footer() {
           <Link
             fontWeight='500'
             color={linkColor}
+            _hover={{ color: "purple.500" }}
             href='mailto:juan.diego.cardenas@correounivalle.edu.co'>
             Soporte
           </Link>
@@ -67,6 +69,7 @@ export default function Footer() {
           <Link
             fontWeight='500'
             color={linkColor}
+            _hover={{ color: "purple.500" }}
             href='https://www.simmmple.com/licenses?ref=horizon-chakra-free'>
             Licencia
           </Link>
@@ -75,6 +78,7 @@ export default function Footer() {
           <Link
             fontWeight='500'
             color={linkColor}
+            _hover={{ color: "purple.500" }}
             href='https://simmmple.com/terms-of-service?ref=horizon-chakra-free'>
             Términos de Uso
           </Link>
@@ -83,6 +87,7 @@ export default function Footer() {
           <Link
             fontWeight='500'
             color={linkColor}
+            _hover={{ color: "purple.500" }}
             href='https://www.blog.simmmple.com/?ref=horizon-chakra-free'>
             Blog
           </Link>

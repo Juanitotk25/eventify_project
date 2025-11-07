@@ -36,7 +36,7 @@ class EventViewSet(viewsets.ModelViewSet):
             )
         return qs
 
-    # 2. Función para CREAR eventos (POST)
-def perform_create(self, serializer):
-    # ASIGNA EL ORGANIZADOR USANDO LA RELACIÓN INVERSA
-    serializer.save(organizer=self.request.user.profile)
+            # 2. Función para CREAR eventos (POST)
+    def perform_create(self, serializer):
+        # ASIGNA EL ORGANIZADOR USANDO LA RELACIÓN INVERSA
+        serializer.save(organizer=self.request.user.profile)
