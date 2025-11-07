@@ -1,4 +1,4 @@
-🎟️ Eventify
+# Eventify
 
 Eventify is a web platform to create, manage, and discover events.
 Built with Django (backend) and React (frontend) to simplify event organization and attendance.
@@ -17,12 +17,16 @@ Frontend	React + Vite + Tailwind CSS
 Auth	JWT (rest_framework_simplejwt)
 UI	Chakra UI, Axios, React Router
 🚀 Setup & Run Locally
-1️⃣ Clone the repository
+
+### 1️⃣ Clonar el repositorio
+```bash
 git clone https://github.com/Juanitotk25/eventify_project.git
 cd eventify_project
+```
 
 2️⃣ Backend setup (Django)
 Create and activate virtual environment
+```bash
 cd backend
 python -m venv venv
 # Activate environment
@@ -30,53 +34,33 @@ python -m venv venv
 venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
+```
 
 Install dependencies
+```bash
 pip install -r requirements.txt
-
-Create .env file in backend/
-SECRET_KEY=your_secret_key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
+```
 
 Apply migrations and start the server
+```bash
 python manage.py migrate
 python manage.py runserver
+```
 
 
 The API will be available at: http://127.0.0.1:8000/api/
 
 3️⃣ Frontend setup (React)
+```bash
 cd ../frontend
 npm install
-npm run dev
+npm start
+```
 
-
-Then open: http://localhost:5173
+Then open: http://localhost:3000
 
 (Make sure the backend server is running first.)
 
-⚙️ Environment Variables
-Backend (.env)
-SECRET_KEY=...
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-
-Frontend (.env)
-VITE_API_URL=http://127.0.0.1:8000/api
-
-🧪 Running Tests
-
-Backend:
-
-python manage.py test
-
-
-Frontend (if configured):
-
-npm run test
 
 🧱 Architecture
 
