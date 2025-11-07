@@ -117,7 +117,7 @@ function SignIn() {
       });
 
       // 6. Redirigir al dashboard (Ruta por defecto del dashboard de Horizon UI)
-      navigate('/user/dashboard');
+      navigate('/user');
 
     } catch (error) {
       // 7. Manejo de errores
