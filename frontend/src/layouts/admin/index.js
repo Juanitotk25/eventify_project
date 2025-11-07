@@ -2,12 +2,12 @@
 import { Portal, Box, useDisclosure } from '@chakra-ui/react';
 import Footer from '../../components/footer/FooterUser.js';
 // Layout components
-import MainDashboard from 'views/admin/default';
 import Navbar from 'components/navbar/NavbarAdmin.js';
 import Sidebar from 'components/sidebar/Sidebar.js';
 import { SidebarContext } from 'contexts/SidebarContext';
+import { useLocation } from "react-router-dom";
 import React, { useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import {Navigate, Route, Routes} from 'react-router-dom';
 import routes from 'routes.js';
 
 // Custom Chakra theme
@@ -20,6 +20,7 @@ export default function Dashboard(props) {
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
   };
+  const location = useLocation();
   const getActiveRoute = (routes) => {
     let activeRoute = 'Default Brand Text';
     for (let i = 0; i < routes.length; i++) {
@@ -91,13 +92,10 @@ export default function Dashboard(props) {
   };
   const getRoutes = (routes) => {
     return routes.map((route, key) => {
-      if (route.layout === '/admin') {
+      if (route.layout === '/user') {
         return (
           <Route path={`${route.path}`} element={route.component} key={key} />
         );
-      }
-      if (route.layout === '/auth') {
-        return ([]);
       }
       if (route.collapse) {
         return getRoutes(route.items);
@@ -107,7 +105,7 @@ export default function Dashboard(props) {
     });
   };
   const getSidebarRoutes = (routes) => {
-    return routes.filter((r) => r.layout === '/admin' || r.collapse)
+    return routes.filter((r) => r.layout === '/user' || r.collapse)
         .map((r) => r.collapse ? { ...r, items: getSidebarRoutes(r.items) } : r);
   };
   document.documentElement.dir = 'ltr';
@@ -150,7 +148,6 @@ export default function Dashboard(props) {
                 />
               </Box>
             </Portal>
-
             {getRoute() ? (
               <Box
                 mx="auto"
@@ -159,13 +156,15 @@ export default function Dashboard(props) {
                 minH="100vh"
                 pt="50px"
               >
-                {/* // 🚨 REEMPLAZO TEMPORAL DE TODAS LAS RUTAS 🚨 */}
-                <Routes>
-                  <Route path="/default" element={<MainDashboard />} />
-                </Routes>
-                {/* // 🚨 FIN DEL REEMPLAZO 🚨 */}
-              </Box>
-            ) : null}
+              <Routes>
+                {getRoutes(routes)}
+                <Route
+                    path="/"
+                    element={<Navigate to="/user/dashboard" replace />}
+                />
+              </Routes>
+              </Box>
+                 ) : null}
             <Box>
               <Footer />
             </Box>

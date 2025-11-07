@@ -100,6 +100,8 @@ const EventFormModal = ({ isOpen, onClose, currentEvent, fetchEvents, API_BASE_U
 
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error("Response text:", errorData);
+                console.error("Status:", response.status);
                 const errorMessage = errorData.detail || JSON.stringify(errorData);
                 throw new Error(errorMessage || `Error ${response.status}: Fallo al guardar evento.`);
             }

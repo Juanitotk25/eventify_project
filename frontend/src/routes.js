@@ -6,14 +6,12 @@ import {
   MdPerson,
   MdHome,
   MdLock,
-  MdOutlineShoppingCart,
   MdEvent,
   MdAddCircle
 } from 'react-icons/md';
 
 // Admin Imports
 import MainDashboard from 'views/admin/default';
-import NFTMarketplace from 'views/admin/marketplace';
 import Profile from 'views/admin/profile';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
@@ -53,21 +51,6 @@ const routes = [
     path: "/home",
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <LandingPage />,
-  },
-  {
-    name: 'NFT Marketplace',
-    layout: '/user',
-    path: '/nft-marketplace',
-    icon: (
-      <Icon
-        as={MdOutlineShoppingCart}
-        width="20px"
-        height="20px"
-        color="inherit"
-      />
-    ),
-    component: <NFTMarketplace />,
-    secondary: true,
   },
   {
     name: 'Data Tables',
