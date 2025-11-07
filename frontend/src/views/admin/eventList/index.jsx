@@ -237,7 +237,7 @@ export default function EventList() {
                         </Text>
 
                         {/* Botones de Acción */}
-                        <Flex justify="flex-end" gap="10px" mt="3">
+                        <Flex justify="flex-end" gap="10px" mt="auto">
                             <Button
                                 colorScheme="blue"
                                 size="sm"
