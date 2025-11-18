@@ -258,7 +258,12 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               px="14px"
             >
-              <Text fontSize="sm" onClick={logout}>Cerrar Sesión</Text>
+              <Text fontSize="sm"
+                    onClick={()=> {
+                      logout();
+                      navigate("/");
+                    }}
+              >Cerrar Sesión</Text>
             </MenuItem>
           </Flex>
         </MenuList>

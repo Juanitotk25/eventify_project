@@ -173,6 +173,11 @@ export default function EventList() {
                     variant="search"
                     h="44px"
                     borderRadius="inherit"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            fetchEvents(search);
+                        }
+                    }}
                 />
             </InputGroup>
     
