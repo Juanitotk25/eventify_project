@@ -7,24 +7,18 @@ import {
     InputGroup,
     InputLeftElement,
     SimpleGrid,
-    Flex,
     Text,
-    Image,
     IconButton,
     useColorModeValue,
     useToast,
-    Tag,
 } from "@chakra-ui/react";
 
 
 // Custom components
 import { SearchIcon } from "@chakra-ui/icons";
-import Card from "components/card/Card.js";
 import axios from "axios";
-import moment from "moment";
-import { MdPeople } from 'react-icons/md';
 
-// IMPORTACIÓN CLAVE: Debes importar tu componente Modal aquí
+import EventCard from "components/events/EventCard";
 import EventFormModal from "components/events/EventFormModal"; // ¡Asegúrate de que esta ruta sea correcta!
 
 
@@ -58,8 +52,6 @@ export default function EventList() {
 
     const abortRef = useRef(null);
     const toast = useToast();
-    const textColor = useColorModeValue("secondaryGray.900", "white");
-    const cardBg = useColorModeValue("white", "navy.700");
 
     const searchIconColor = useColorModeValue("gray.700", "white");
     const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
@@ -190,51 +182,7 @@ export default function EventList() {
             {/* Lista de eventos */}
             <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
                 {events.map((event) => (
-                    <Card
-                        key={event.id}
-                        p="20px"
-                        bg={cardBg}
-                        borderRadius="2xl"
-                        boxShadow="md"
-                    >
-                        <Image
-                            src={event.cover_url || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800"}
-                            alt={event.title}
-                            borderRadius="xl"
-                            h="180px"
-                            w="100%"
-                            objectFit="cover"
-                            mb="4"
-                        />
-
-                        <Flex justify="space-between" align="center" mb="2">
-                            <Tag
-                                size="sm"
-                                colorScheme="brand"
-                                fontWeight="bold"
-                            >
-                                {getCategoryName(event.category)}
-                            </Tag>
-
-                            <Flex align="center">
-                                <Box as={MdPeople} color="gray.500" mr="1" />
-                                <Text color="gray.500" fontSize="sm" fontWeight="bold">
-                                    {event.capacity || "N/A"} personas
-                                </Text>
-                            </Flex>
-                        </Flex>
-
-                        <Text fontSize="xl" fontWeight="700" color={textColor}>
-                            {event.title}
-                        </Text>
-
-                        <Text color="gray.500" fontSize="sm" mb="1">
-                            {event.start_time ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
-                        </Text>
-                        <Text fontSize="sm" mb="3" color={textColor}>
-                            {event.description || "Sin descripción"}
-                        </Text>
-                    </Card>
+                    <EventCard key={event.id} event={event} />
                 ))}
             </SimpleGrid>
 

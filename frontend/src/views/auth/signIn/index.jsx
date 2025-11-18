@@ -45,6 +45,7 @@ import {
 // Custom components
 import { HSeparator } from "components/separator/Separator";
 import DefaultAuth from "layouts/auth/Default";
+import { useAuthStore } from "stores/useAuthStore";
 // Assets
 import illustration from "assets/img/logo_icon.png";
 import { FcGoogle } from "react-icons/fc";
@@ -59,6 +60,7 @@ function SignIn() {
   // Inicialización de hooks y estados
   const navigate = useNavigate(); // Hook de navegación para redirigir
   const toast = useToast(); // Hook para mostrar notificaciones
+  const setUser = useAuthStore((state) => state.setUser); //Para almacenar contexto de usuario
 
   // 3. Estados para capturar el formulario
   const [username, setUsername] = useState('');
@@ -85,6 +87,7 @@ function SignIn() {
     { bg: "secondaryGray.300" },
     { bg: "whiteAlpha.200" }
   );
+
   // (Fin de variables de estilo)
 
   // 4. Función principal de envío del formulario
@@ -115,6 +118,7 @@ function SignIn() {
         duration: 2000,
         isClosable: true,
       });
+      useAuthStore.getState().setUser(username);
 
       // 6. Redirigir al dashboard (Ruta por defecto del dashboard de Horizon UI)
       navigate('/user');
