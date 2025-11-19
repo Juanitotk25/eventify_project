@@ -1,3 +1,4 @@
+import { NavLink, useNavigate } from "react-router-dom";
 // Chakra Imports
 import {
   Avatar,
@@ -47,6 +48,7 @@ export default function HeaderLinks(props) {
 
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -258,7 +260,12 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               px="14px"
             >
-              <Text fontSize="sm" onClick={logout}>Cerrar Sesión</Text>
+              <Text fontSize="sm"
+                    onClick={()=> {
+                      logout();
+                      navigate("/");
+                    }}
+              >Cerrar Sesión</Text>
             </MenuItem>
           </Flex>
         </MenuList>

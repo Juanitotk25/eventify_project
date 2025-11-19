@@ -10,7 +10,7 @@ import {
     Text,
     IconButton,
     useColorModeValue,
-    useToast,
+    useToast, Select, Flex,
 } from "@chakra-ui/react";
 
 
@@ -23,24 +23,28 @@ import EventFormModal from "components/events/EventFormModal"; // ¡Asegúrate d
 
 
 // MAPEO DE CATEGORÍAS
-const CATEGORY_MAP = {
-    4: "Académico",
-    5: "Cultural",
-    6: "Deportivo",
-    7: "Social",
-    8: "Networking",
-};
-
-const getCategoryName = (id) => {
-    if (typeof id === 'string' && id.length > 0) {
-        return id.charAt(0).toUpperCase() + id.slice(1);
-    }
-    return CATEGORY_MAP[id] || "General";
-};
+// const CATEGORY_MAP = {
+//     4: "Académico",
+//     5: "Cultural",
+//     6: "Deportivo",
+//     7: "Social",
+//     8: "Networking",
+// };
+//
+// const getCategoryName = (id) => {
+//     if (typeof id === 'string' && id.length > 0) {
+//         return id.charAt(0).toUpperCase() + id.slice(1);
+//     }
+//     return CATEGORY_MAP[id] || "General";
+// };
 
 
 export default function EventList() {
     const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("");
+    const [location, setLocation] = useState("");
+    const [dateStart, setDateStart] = useState("");
+    const [dateEnd, setDateEnd] = useState("");
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -59,7 +63,7 @@ export default function EventList() {
 
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
 
-    const fetchEvents = async (query) => {
+    const fetchEvents = async (filters = {}) => {
         if (abortRef.current) abortRef.current.abort();
         abortRef.current = new AbortController();
 
@@ -72,8 +76,13 @@ export default function EventList() {
         setLoading(true);
         setError("");
         try {
-            const params = {};
-            if (query && query.trim()) params.search = query.trim();
+            const params = new URLSearchParams();
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value && value !== "") {
+                    params.append(key, value);
+                }
+            });
+            //if (query && query.trim()) params.search = query.trim();
             const res = await axios.get(`${API_BASE}/api/events/`, {
                 params,
                 headers: {
@@ -139,11 +148,26 @@ export default function EventList() {
 
     useEffect(() => {
       const id = setTimeout(() => {
-        fetchEvents(search);
+          fetchEvents({
+              search,
+              category,
+              dateStart,
+              dateEnd,
+              location });
       }, 400);
       return () => clearTimeout(id);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
+
+    useEffect(() => {
+        fetchEvents({
+            search,
+            category,
+            dateStart,
+            dateEnd,
+            location,
+        });
+    }, [search, category, dateStart, dateEnd, location]);
     
     return (
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
@@ -159,8 +183,15 @@ export default function EventList() {
                             _active={{ bg: "inherit" }}
                             _focus={{ bg: "inherit" }}
                             icon={<SearchIcon color={searchIconColor} w="15px" h="15px" />}
-                            onClick={() => fetchEvents(search)}
-                        />
+                            onClick={() =>{ fetchEvents({
+                                search,
+                                category,
+                                dateStart,
+                                dateEnd,
+                                location });
+                            }
+                        }
+                         aria-label="Buscar"/>
                     }
                 />
                 <Input
@@ -173,8 +204,71 @@ export default function EventList() {
                     variant="search"
                     h="44px"
                     borderRadius="inherit"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            fetchEvents({
+                                search,
+                                category,
+                                dateStart,
+                                dateEnd,
+                                location,
+                            });
+                        }
+                    }}
                 />
             </InputGroup>
+            <Flex
+            direction="row"
+            gap={2}
+            py="2vh">
+                <Select
+                    placeholder="Categoría"
+                    w={{ base: "100%", md: "200px" }}
+                    value={category}
+                    onChange={(e) => {
+                        setCategory(e.target.value);
+                        fetchEvents({
+                            search,
+                            category,
+                            dateStart,
+                            dateEnd,
+                            location,
+                        });}
+                }
+                >
+                    <option value="Académico">Académico</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Deportivo">Deportivo</option>
+                    <option value="Social">Social</option>
+                    <option value="Networking">Networking</option>
+                </Select>
+
+                {/* Date Picker (native) */}
+                <Input
+                    type="date"
+                    placeholder="Fecha de Inicio"
+                    w={{ base: "100%", md: "200px" }}
+                    value={dateStart}
+                    onChange={(e) => setDateStart(e.target.value)}
+                />
+
+                <Input
+                    type="date"
+                    placeholder="Fecha de Finalización"
+                    w={{ base: "100%", md: "200px" }}
+                    value={dateEnd}
+                    onChange={(e) => setDateEnd(e.target.value)}
+                />
+
+                {/* Location Input */}
+                <Input
+                    placeholder="Ubicación"
+                    w={{ base: "100%", md: "200px" }}
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                />
+
+            </Flex>
     
             {loading && <Text color="gray.500" mb="4">Cargando eventos...</Text>}
             {error && !loading && <Text color="red.400" mb="4">{error}</Text>}
