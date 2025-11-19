@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.db.models import Q, F
 from users.models import Profile
+import django_filters
 
 
 class RegistrationStatus(models.TextChoices):

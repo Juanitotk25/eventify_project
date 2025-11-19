@@ -1,3 +1,4 @@
+import { NavLink, useNavigate } from "react-router-dom";
 // Chakra Imports
 import {
   Avatar,
@@ -47,6 +48,7 @@ export default function HeaderLinks(props) {
 
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
 
   return (
     <Flex
