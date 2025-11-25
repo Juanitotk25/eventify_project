@@ -1,11 +1,12 @@
 import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
-    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useColorModeValue
+    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useColorModeValue, useToast
 } from "@chakra-ui/react";
 import { MdPeople } from "react-icons/md";
 import moment from "moment";
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
 
 export default function EventCard({ event }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -13,6 +14,9 @@ export default function EventCard({ event }) {
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
     const cardBg = useColorModeValue("white", "navy.700");
+    const toast = useToast();
+    const [isJoining, setIsJoining] = useState(false);
+
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
         4: "Académico",
@@ -27,6 +31,29 @@ export default function EventCard({ event }) {
             return id.charAt(0).toUpperCase() + id.slice(1);
         }
         return CATEGORY_MAP[id] || "General";
+    };
+
+    const handleJoin = async () => {
+        setIsJoining(true);
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            toast({ title: "Error", description: "Debes iniciar sesión para inscribirte.", status: "error", duration: 3000, isClosable: true });
+            setIsJoining(false);
+            return;
+        }
+
+        try {
+            await axios.post(`http://localhost:8000/api/events/${event.id}/join/`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast({ title: "¡Inscripción exitosa!", description: "Te has inscrito al evento correctamente.", status: "success", duration: 3000, isClosable: true });
+            onClose();
+        } catch (error) {
+            const msg = error.response?.data?.detail || "Error al inscribirse al evento.";
+            toast({ title: "Error", description: msg, status: "error", duration: 3000, isClosable: true });
+        } finally {
+            setIsJoining(false);
+        }
     };
 
     return (
@@ -107,7 +134,7 @@ export default function EventCard({ event }) {
                             textColor={textColor}
                             fontSize="lg"
                             direction="column"
-                            >
+                        >
                             <Text mb="2">
                                 <strong>Fecha:</strong>{" "}
                                 {event.start_time
@@ -136,9 +163,14 @@ export default function EventCard({ event }) {
                             justifyContent="space-between"
                             grow={1}
                             px={10}
+                        >
+                            <Button
+                                colorScheme="green"
+                                onClick={handleJoin}
+                                isLoading={isJoining}
+                                loadingText="Inscribiendo..."
+                                fontSize="lg" gap={2}
                             >
-                            <Button colorScheme="green" onClick={onClose}
-                            fontSize="lg" gap={2}>
                                 Unirme
                                 <Box as={MdPeople} color={textColor} mr="1" />
                             </Button>
