@@ -5,7 +5,7 @@ import AuthFooter from "components/footer/FooterAuth";
 import banner from "assets/img/auth/landing-banner.avif";
 import logo from "assets/img/logo_icon.png"
 import {HSeparator} from "../../../components/separator/Separator";
-
+import LandingEventsCalendar from "../landingEventsCalendar";
 export default function LandingPage() {
     const navigate = useNavigate();
 
@@ -14,60 +14,93 @@ export default function LandingPage() {
             direction="column"
             minH="100vh"
             align="center"
-            justify="space-between"
+            justify="flex-start"
             bgGradient="linear(to-br, blue.600, purple.700)"
             color="white"
             textAlign="center"
-            overflow="hidden"
             position="relative"
+            pb={8}
         >
-            <Box width="full" zIndex={0} maxH="50vh">
+            {/* Banner Image */}
+            <Box width="full" zIndex={0} maxH="50vh" overflow="hidden">
                 <Image
                     src={banner}
                     alt="Estudiantes compartiendo eventos"
                     shadow="xl"
+                    width="100%"
+                    height="auto"
+                    objectFit="cover"
                 />
             </Box>
-            {/* Hero Section */}
-            <Flex
-                direction={{ base: "column", md: "row" }}
-                align="center"
-                justify="center"
-                zIndex={2}
-                position="absolute"
-                top="45%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                maxW="60vw"
-            >
-                {/* Text */}
-                <Box
-                    minW="60vw"
-                    minH="65vh"
-                    bgGradient="linear(to-br, blue.600, purple.700)"
-                    borderRadius="50px"
-                    display="flex"
-                    justifyContent="center">
 
-                        <Box display="flex" flexDirection="column" alignItems="center" gap={4}
-                             justifyContent="center" my="4vh" mx="10vw" textAlign="center">
-                            <Flex direction="row" gap={5} alignItems="flex-end"
-                                  justifyContent="space-between">
+            {/* Hero Section - Login Information */}
+            <Box
+                width="full"
+                position="relative"
+                zIndex={2}
+                mt={{ base: "-100px", md: "-120px" }}
+                mb={{ base: "40px", md: "60px" }}
+            >
+                <Flex
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    maxW={{ base: "90vw", md: "60vw", lg: "800px" }}
+                    mx="auto"
+                >
+                    <Box
+                        width="full"
+                        bgGradient="linear(to-br, blue.600, purple.700)"
+                        borderRadius="50px"
+                        p={{ base: 6, md: 8 }}
+                        boxShadow="2xl"
+                    >
+                        <Box
+                            display="flex"
+                            flexDirection="column"
+                            alignItems="center"
+                            gap={4}
+                            justifyContent="center"
+                            textAlign="center"
+                        >
+                            <Flex
+                                direction="row"
+                                gap={5}
+                                alignItems="flex-end"
+                                justifyContent="center"
+                                flexWrap="wrap"
+                            >
                                 <Image
                                     src={logo}
                                     alt="Logo Eventify"
-                                    style={{ width: "12vw", height: "auto" }}
+                                    style={{ width: "12vw", maxWidth: "120px", height: "auto" }}
                                 />
-                            <Heading fontSize="5em" size="2xl" minH="15vh" minW="25vw" maxW="40vw" mb={4} fontWeight="extrabold"
-                                     bgGradient="linear(to-r, blue.200, purple.200)"
-                                     bgClip="text">
-                                Eventify
-                            </Heading>
+                                <Heading
+                                    fontSize={{ base: "3em", md: "5em" }}
+                                    size="2xl"
+                                    mb={4}
+                                    fontWeight="extrabold"
+                                    bgGradient="linear(to-r, blue.200, purple.200)"
+                                    bgClip="text"
+                                >
+                                    Eventify
+                                </Heading>
                             </Flex>
-                            <Heading as="h1" size="2xl" maxW="40vw" mb={4} fontWeight="extrabold">
+                            <Heading
+                                as="h1"
+                                size={{ base: "xl", md: "2xl" }}
+                                mb={4}
+                                fontWeight="extrabold"
+                            >
                                 ¡No te perdás ni una!
                             </Heading>
-                            <Text fontSize="lg" mb={8} maxW="30vw" lineHeight="tall">
+                            <Text
+                                fontSize={{ base: "md", md: "lg" }}
+                                mb={8}
+                                maxW="600px"
+                                lineHeight="tall"
+                                px={4}
+                            >
                                 Descubre, comparte y participa en los eventos dentro y fuera del
                                 campus. Tu red social universitaria para no perderte nada.
                             </Text>
@@ -85,32 +118,52 @@ export default function LandingPage() {
                                 >
                                     Iniciar Sesión
                                 </Button>
-                        </Flex>
-                            <Flex minW="40vw" gap={2} direction="column" alignItems="center"
-                                  justifyContent="center" mt="auto" py="2vh" >
+                            </Flex>
+                            <Flex
+                                minW={{ base: "80vw", md: "40vw" }}
+                                gap={2}
+                                direction="column"
+                                alignItems="center"
+                                justifyContent="center"
+                                mt={6}
+                                py="2vh"
+                            >
                                 <HSeparator />
-                                <Text color='white' mx='14px'>
+                                <Text color="white" mx="14px">
                                     ó
                                 </Text>
-                                <NavLink to='/auth/sign-up'>
+                                <NavLink to="/auth/sign-up">
                                     <Text
                                         color="purple.300"
-                                        as='span'
+                                        as="span"
                                         _hover={{
                                             color: "white",
                                         }}
-                                        ms='5px'
-                                        fontWeight='500'>
+                                        ms="5px"
+                                        fontWeight="500"
+                                    >
                                         ¡Crea tu Cuenta!
                                     </Text>
                                 </NavLink>
                             </Flex>
+                        </Box>
                     </Box>
-                </Box>
-            </Flex>
+                </Flex>
+            </Box>
+
+            {/* Events Calendar - Positioned below login section */}
+            <Box
+                width="full"
+                position="relative"
+                zIndex={1}
+                px={{ base: 4, md: 8 }}
+                mb={8}
+            >
+                <LandingEventsCalendar />
+            </Box>
 
             {/* Footer */}
-            <Box w="full" mt={10} zIndex={3}>
+            <Box w="full" mt="auto" zIndex={1}>
                 <AuthFooter />
             </Box>
         </Flex>
