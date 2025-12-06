@@ -43,14 +43,14 @@ api.interceptors.response.use(
 
 // API específica para usuarios
 export const userAPI = {
-  // Obtener el conteo de eventos del usuario
-  getMyEventCount: async () => {
+  // Obtener eventos inscritos del usuario (reemplaza getMyEventCount)
+  getMyNotifications: async () => {
     try {
-      const response = await api.get('/api/users/my-event-count/'); // ← Nota el /api/ extra
+      const response = await api.get('/api/users/notifications/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching event count:', error);
-      return { event_count: 0 };
+      console.error('Error fetching notifications:', error);
+      return { event_count: 0, events: [] };
     }
   },
 };

@@ -3,8 +3,9 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from event_management.models import EventRegistration  # Importamos el modelo de eventos
-from .serializers import UserSerializer  # Aún no existe, la crearemos
+from event_management.models import EventRegistration
+from event_management.serializers import EventSerializer  # Importar el serializer de eventos
+from .serializers import UserSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -24,28 +25,46 @@ class RegisterView(generics.CreateAPIView):
         )
 
 
-class UserEventCountView(APIView):
+class UserNotificationsView(APIView):
     """
-    View para obtener el número de eventos en los que el usuario está inscrito.
+    View para obtener los eventos en los que el usuario está inscrito.
     Se usará para el icono de notificaciones.
     """
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         try:
-            # Contar las inscripciones del usuario actual
-            count = EventRegistration.objects.filter(
+            # Obtener las inscripciones del usuario con información del evento
+            registrations = EventRegistration.objects.filter(
                 user=request.user.profile
-            ).count()
+            ).select_related('event').order_by('-created_at')
+            
+            # Preparar los datos de los eventos
+            events_data = []
+            for registration in registrations[:10]:  # Limitar a los últimos 10
+                event = registration.event
+                events_data.append({
+                    'id': event.id,
+                    'title': event.title,
+                    'description': event.description[:100] + '...' if event.description and len(event.description) > 100 else event.description,
+                    'start_time': event.start_time,
+                    'location': event.location,
+                    'category': event.category.name if event.category else None,
+                    'cover_url': event.cover_url,
+                    'registration_date': registration.created_at,
+                    'status': registration.status,
+                })
             
             return Response({
-                "event_count": count,
-                "user_id": request.user.id,
-                "username": request.user.username
+                'event_count': registrations.count(),
+                'events': events_data,
+                'user_id': request.user.id,
+                'username': request.user.username
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
             return Response({
-                "event_count": 0,
-                "error": str(e)
-            }, status=status.HTTP_200_OK)  # Devuelve 0 en caso de error
+                'event_count': 0,
+                'events': [],
+                'error': str(e)
+            }, status=status.HTTP_200_OK)
