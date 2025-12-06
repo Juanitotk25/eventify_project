@@ -3,8 +3,10 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from event_management.models import EventRegistration
-from event_management.serializers import EventSerializer  # Importar el serializer de eventos
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
+from event_management.models import EventRegistration, Event
+from event_management.serializers import EventSerializer
 from .serializers import UserSerializer
 
 
@@ -51,6 +53,7 @@ class UserNotificationsView(APIView):
                     'location': event.location,
                     'category': event.category.name if event.category else None,
                     'cover_url': event.cover_url,
+                    'registration_id': str(registration.id),  # ¡IMPORTANTE para cancelar!
                     'registration_date': registration.created_at,
                     'status': registration.status,
                 })
@@ -68,3 +71,44 @@ class UserNotificationsView(APIView):
                 'events': [],
                 'error': str(e)
             }, status=status.HTTP_200_OK)
+
+
+class CancelRegistrationView(APIView):
+    """
+    View para cancelar la inscripción a un evento.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def delete(self, request, registration_id):
+        try:
+            # Buscar la inscripción
+            registration = get_object_or_404(
+                EventRegistration,
+                id=registration_id,
+                user=request.user.profile  # Solo puede cancelar sus propias inscripciones
+            )
+            
+            # Guardar información para la respuesta
+            event_title = registration.event.title
+            registration_id_str = str(registration.id)
+            
+            # Eliminar la inscripción
+            registration.delete()
+            
+            return Response({
+                'success': True,
+                'message': f'Inscripción a "{event_title}" cancelada exitosamente.',
+                'registration_id': registration_id_str,
+                'event_title': event_title,
+            }, status=status.HTTP_200_OK)
+            
+        except EventRegistration.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'No se encontró la inscripción.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)

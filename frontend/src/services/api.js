@@ -43,7 +43,7 @@ api.interceptors.response.use(
 
 // API específica para usuarios
 export const userAPI = {
-  // Obtener eventos inscritos del usuario (reemplaza getMyEventCount)
+  // Obtener eventos inscritos del usuario
   getMyNotifications: async () => {
     try {
       const response = await api.get('/api/users/notifications/');
@@ -51,6 +51,17 @@ export const userAPI = {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       return { event_count: 0, events: [] };
+    }
+  },
+  
+  // Cancelar inscripción a un evento
+  cancelRegistration: async (registrationId) => {
+    try {
+      const response = await api.delete(`/api/users/cancel-registration/${registrationId}/`);
+      return response.data;
+    } catch (error) {
+      console.error('Error cancelling registration:', error);
+      throw error;
     }
   },
 };
