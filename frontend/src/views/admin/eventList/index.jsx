@@ -38,7 +38,7 @@ export default function EventList() {
 
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
 
-    // 🔥 FUNCIÓN PRINCIPAL PARA CARGAR EVENTOS
+    // FUNCIÓN PRINCIPAL PARA CARGAR EVENTOS
     const fetchEvents = async (filters = {}) => {
         if (abortRef.current) abortRef.current.abort();
         abortRef.current = new AbortController();
@@ -106,7 +106,7 @@ export default function EventList() {
     return (
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
             
-            {/* 🔍 BUSCADOR */}
+            {/* BUSCADOR */}
             <InputGroup mb="20px" borderRadius="15px" w={{ base: "100%", md: "300px" }}>
                 <InputLeftElement
                     children={
@@ -141,7 +141,7 @@ export default function EventList() {
                 />
             </InputGroup>
 
-            {/* 🎛️ FILTROS */}
+            {/* FILTROS */}
             <Flex direction="row" gap={2} py="2vh">
                 <Select
                     placeholder="Categoría"
@@ -180,7 +180,7 @@ export default function EventList() {
                 />
             </Flex>
 
-            {/* 📌 LISTA DE EVENTOS */}
+            {/* LISTA DE EVENTOS */}
             {loading && <Text color="gray.500">Cargando eventos...</Text>}
             {error && !loading && <Text color="red.400">{error}</Text>}
 

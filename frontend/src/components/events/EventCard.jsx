@@ -1,21 +1,31 @@
 import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
-    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useColorModeValue, useToast
+    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, 
+    Button, useColorModeValue, useToast
 } from "@chakra-ui/react";
-import { MdPeople } from "react-icons/md";
+import { MdPeople, MdList } from "react-icons/md";
 import moment from "moment";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import AttendeeList from "./AttendeeList";
+
 
 export default function EventCard({ event }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const { 
+        isOpen: isAttendeeListOpen, 
+        onOpen: onAttendeeListOpen, 
+        onClose: onAttendeeListClose 
+    } = useDisclosure();
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
     const cardBg = useColorModeValue("white", "navy.700");
     const toast = useToast();
     const [isJoining, setIsJoining] = useState(false);
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
 
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
@@ -33,6 +43,38 @@ export default function EventCard({ event }) {
         return CATEGORY_MAP[id] || "General";
     };
 
+    // Check if user is registered when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            checkRegistrationStatus();
+        }
+    }, [isOpen, event.id]);
+
+    const checkRegistrationStatus = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setIsRegistered(false);
+            return;
+        }
+
+        setIsCheckingRegistration(true);
+        try {
+            const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+            const response = await axios.get(
+                `${API_BASE}/api/events/${event.id}/check_registration/`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+            setIsRegistered(response.data.is_registered || false);
+        } catch (error) {
+            console.error("Error checking registration:", error);
+            setIsRegistered(false);
+        } finally {
+            setIsCheckingRegistration(false);
+        }
+    };
+
     const handleJoin = async () => {
         setIsJoining(true);
         const token = localStorage.getItem("access_token");
@@ -43,11 +85,12 @@ export default function EventCard({ event }) {
         }
 
         try {
-            await axios.post(`http://localhost:8000/api/events/${event.id}/join/`, {}, {
+            const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+            await axios.post(`${API_BASE}/api/events/${event.id}/join/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast({ title: "¡Inscripción exitosa!", description: "Te has inscrito al evento correctamente.", status: "success", duration: 3000, isClosable: true });
-            onClose();
+            setIsRegistered(true); // Update registration status
         } catch (error) {
             const msg = error.response?.data?.detail || "Error al inscribirse al evento.";
             toast({ title: "Error", description: msg, status: "error", duration: 3000, isClosable: true });
@@ -159,28 +202,42 @@ export default function EventCard({ event }) {
                     <ModalFooter>
                         <Flex
                             direction="row"
-                            gap={10}
-                            justifyContent="space-between"
-                            grow={1}
-                            px={10}
+                            gap={3}
+                            justifyContent="flex-end"
+                            w="100%"
                         >
                             <Button
                                 colorScheme="green"
                                 onClick={handleJoin}
                                 isLoading={isJoining}
                                 loadingText="Inscribiendo..."
-                                fontSize="lg" gap={2}
+                                fontSize="md"
+                                isDisabled={isRegistered}
                             >
-                                Unirme
-                                <Box as={MdPeople} color={textColor} mr="1" />
+                                {isRegistered ? "Ya estás inscrito" : "Unirme"}
+                                <Box as={MdPeople} ml={2} />
                             </Button>
-                            <Button colorScheme="red" onClick={onClose}>
-                                Cerrar
+                            <Button
+                                colorScheme="blue"
+                                onClick={onAttendeeListOpen}
+                                isDisabled={!isRegistered && !isCheckingRegistration}
+                                fontSize="md"
+                            >
+                                Ver Asistentes
+                                <Box as={MdList} ml={2} />
                             </Button>
                         </Flex>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            {/* Attendee List Modal */}
+            <AttendeeList
+                isOpen={isAttendeeListOpen}
+                onClose={onAttendeeListClose}
+                eventId={event.id}
+                onUserJoined={() => setIsRegistered(true)} 
+            />
         </>
     );
 }

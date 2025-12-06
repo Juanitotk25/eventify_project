@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 // Importaciones de Chakra UI
 import {
@@ -11,9 +12,11 @@ import {
     SimpleGrid,
     Text,
     Textarea,
+    Switch,
     useColorModeValue,
     Box,
     useToast, 
+    FormHelperText,
 } from "@chakra-ui/react";
 
 // Componentes personalizados
@@ -22,7 +25,8 @@ import Card from "components/card/Card.js";
 // **********************************************
 // URL de la API
 // **********************************************
-const API_BASE_URL = 'http://localhost:8000/api/events'; 
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+const API_BASE_URL = `${API_BASE}/api/events`; 
 
 // 🚀 CAMBIO CLAVE: Acepta 'initialEvent' como prop.
 export default function EventForm({ initialEvent, onSuccess, onCancel }) { 
@@ -35,11 +39,14 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         location: "",
         description: "",
         capacity: "",
+        cover_url: "",
+        is_public: true,
     });
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
     const textColor = useColorModeValue("secondaryGray.900", "white");
+
 
     // 2. Efecto para cargar los datos del evento si estamos editando
     useEffect(() => {
@@ -60,16 +67,18 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                 location: initialEvent.location || "",
                 description: initialEvent.description || "",
                 capacity: initialEvent.capacity ? String(initialEvent.capacity) : "",
+                cover_url: initialEvent.cover_url || "",
+                is_public: initialEvent.is_public !== undefined ? initialEvent.is_public : true,
             });
         }
     }, [initialEvent]);
 
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: type === "checkbox" ? checked : value,
         }));
     };
 
@@ -124,7 +133,13 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
             location: formData.location,
             description: formData.description,
             capacity: parseInt(formData.capacity, 10),
+            is_public: formData.is_public,
         };
+
+        // Add cover_url only if it has a value
+        if (formData.cover_url.trim()) {
+            dataToSend.cover_url = formData.cover_url.trim();
+        }
 
         console.log(`Enviando ${method} a ${url} con datos:`, dataToSend);
         
@@ -158,6 +173,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                     setFormData({
                         title: "", category: "", startDate: "", endDate: "",
                         location: "", description: "", capacity: "",
+                        cover_url: "", is_public: true,
                     });
                 }
             } else {
@@ -222,7 +238,15 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 <FormLabel htmlFor="category" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Categoría
                                 </FormLabel>
-                                <Select id="category" name="category" placeholder="Seleccionar categoría" onChange={handleChange} value={formData.category} variant="main" h="44px">
+                                <Select 
+                                    id="category" 
+                                    name="category" 
+                                    placeholder="Seleccionar categoría" 
+                                    onChange={handleChange} 
+                                    value={formData.category ? String(formData.category) : ""} 
+                                    variant="main" 
+                                    h="44px"
+                                >
                                     <option value="4">Académico</option>
                                     <option value="5">Cultural</option>
                                     <option value="6">Deportivo</option>
@@ -279,6 +303,48 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 Ubicación
                             </FormLabel>
                             <Input id="location" name="location" type="text" placeholder="Lugar del evento" onChange={handleChange} value={formData.location} variant="main" h="44px"/>
+                        </FormControl>
+
+                        {/* Cover Image URL */}
+                        <FormControl mb="20px">
+                            <FormLabel htmlFor="cover_url" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
+                                URL de Imagen de Portada
+                            </FormLabel>
+                            <Input 
+                                id="cover_url" 
+                                name="cover_url" 
+                                type="url" 
+                                placeholder="https://ejemplo.com/imagen.jpg" 
+                                onChange={handleChange} 
+                                value={formData.cover_url} 
+                                variant="main" 
+                                h="44px"
+                            />
+                            <FormHelperText fontSize="xs" color="gray.500" mt="4px">
+                                URL de una imagen para tu evento (opcional)
+                            </FormHelperText>
+                        </FormControl>
+
+                        {/* Public Event Toggle */}
+                        <FormControl display="flex" alignItems="center" mb="20px">
+                            <Switch
+                                name="is_public"
+                                isChecked={formData.is_public}
+                                onChange={(e) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        is_public: e.target.checked,
+                                    }));
+                                }}
+                                colorScheme="brand"
+                                size="lg"
+                            />
+                            <FormLabel htmlFor="is_public" fontSize="sm" fontWeight="500" color={textColor} mb="0" ml="15px">
+                                Evento público
+                            </FormLabel>
+                            <Text fontSize="xs" color="gray.500" ml="10px">
+                                Los eventos públicos son visibles para todos
+                            </Text>
                         </FormControl>
                     </Card>
                 </SimpleGrid>

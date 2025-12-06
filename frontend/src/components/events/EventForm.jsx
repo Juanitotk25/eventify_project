@@ -47,7 +47,6 @@ export default function EventForm({ initialEvent = null, onSuccess, onCancel, is
     useEffect(() => {
         loadCategories();
         if (initialEvent) {
-            // Populate form with existing event data
             setFormData({
                 title: initialEvent.title || "",
                 description: initialEvent.description || "",
@@ -364,4 +363,5 @@ export default function EventForm({ initialEvent = null, onSuccess, onCancel, is
         </Box>
     );
 }
+
 
