@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 // Chakra Imports
 import {
   Avatar,
+  Badge,
   Button,
   Flex,
   Icon,
@@ -21,17 +22,24 @@ import { ItemContent } from 'components/menu/ItemContent';
 import { SidebarResponsive } from 'components/sidebar/Sidebar';
 import { useAuthStore } from 'stores/useAuthStore';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 // Assets
 import navImage from 'assets/img/layout/Navbar.png';
 import { MdNotificationsNone, MdInfoOutline } from 'react-icons/md';
 import { IoMdMoon, IoMdSunny } from 'react-icons/io';
 import { FaEthereum } from 'react-icons/fa';
 import routes from 'routes';
+import { userAPI } from 'services/api';
+
 export default function HeaderLinks(props) {
   const { secondary } = props;
   const { colorMode, toggleColorMode } = useColorMode();
-  //const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+  
+  // Estados para notificaciones
+  const [eventCount, setEventCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  
   // Chakra Color Mode
   const navbarIcon = useColorModeValue('gray.400', 'white');
   let menuBg = useColorModeValue('white', 'navy.800');
@@ -49,6 +57,99 @@ export default function HeaderLinks(props) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+
+  // Función para obtener el conteo de eventos
+  const fetchEventCount = async () => {
+    // Solo si el usuario está autenticado
+    if (!user) {
+      setEventCount(0);
+      setNotifications([]);
+      return;
+    }
+    
+    try {
+      setLoadingNotifications(true);
+      const data = await userAPI.getMyEventCount();
+      const count = data.event_count || 0;
+      setEventCount(count);
+      
+      // Crear notificaciones basadas en el conteo
+      if (count > 0) {
+        const newNotifications = [
+          {
+            id: 1,
+            title: 'Eventos Inscritos',
+            description: `Estás inscrito en ${count} evento(s)`,
+            time: 'Actualizado ahora',
+            type: 'event_count',
+          },
+          {
+            id: 2,
+            title: 'Recordatorio',
+            description: 'Revisa los detalles de tus eventos próximos',
+            time: 'Hace 1 hora',
+            type: 'reminder',
+          }
+        ];
+        setNotifications(newNotifications);
+      } else {
+        // Mensaje cuando no hay eventos
+        setNotifications([
+          {
+            id: 1,
+            title: 'No hay eventos',
+            description: 'Únete a algunos eventos para ver notificaciones aquí',
+            time: 'Ahora',
+            type: 'info',
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching event count:', error);
+      setEventCount(0);
+      setNotifications([
+        {
+          id: 1,
+          title: 'Error',
+          description: 'No se pudo cargar las notificaciones',
+          time: 'Ahora',
+          type: 'error',
+        }
+      ]);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Cargar el conteo al montar el componente y cuando cambia el usuario
+  useEffect(() => {
+    fetchEventCount();
+    
+    // Actualizar cada 60 segundos
+    const interval = setInterval(fetchEventCount, 60000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Escuchar eventos de inscripción para actualizar en tiempo real
+  useEffect(() => {
+    const handleEventRegistration = () => {
+      fetchEventCount();
+    };
+
+    window.addEventListener('event-joined', handleEventRegistration);
+    window.addEventListener('event-left', handleEventRegistration);
+    
+    return () => {
+      window.removeEventListener('event-joined', handleEventRegistration);
+      window.removeEventListener('event-left', handleEventRegistration);
+    };
+  }, []);
+
+  // Función para marcar todas como leídas
+  const markAllAsRead = () => {
+    setNotifications([]);
+  };
 
   return (
     <Flex
@@ -125,7 +226,7 @@ export default function HeaderLinks(props) {
       </Flex>
       <SidebarResponsive routes={routes} />
       <Menu>
-        <MenuButton p="0px">
+        <MenuButton p="0px" position="relative">
           <Icon
             mt="6px"
             as={MdNotificationsNone}
@@ -134,6 +235,25 @@ export default function HeaderLinks(props) {
             h="18px"
             me="10px"
           />
+          {/* Badge de notificaciones con el conteo */}
+          {eventCount > 0 && (
+            <Badge
+              position="absolute"
+              top="-5px"
+              right="0px"
+              colorScheme="red"
+              borderRadius="full"
+              fontSize="10px"
+              px="5px"
+              minW="18px"
+              textAlign="center"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              {eventCount > 99 ? '99+' : eventCount}
+            </Badge>
+          )}
         </MenuButton>
         <MenuList
           boxShadow={shadow}
@@ -148,38 +268,63 @@ export default function HeaderLinks(props) {
         >
           <Flex w="100%" mb="20px">
             <Text fontSize="md" fontWeight="600" color={textColor}>
-              Notifications
+              Notificaciones
             </Text>
-            <Text
-              fontSize="sm"
-              fontWeight="500"
-              color={textColorBrand}
-              ms="auto"
-              cursor="pointer"
-            >
-              Mark all read
-            </Text>
+            {notifications.length > 0 && notifications.some(n => n.type !== 'info') && (
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={textColorBrand}
+                ms="auto"
+                cursor="pointer"
+                onClick={markAllAsRead}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                Marcar como leídas
+              </Text>
+            )}
           </Flex>
-          <Flex flexDirection="column">
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              px="0"
-              borderRadius="8px"
-              mb="10px"
-            >
-              <ItemContent info="Horizon UI Dashboard PRO" />
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              px="0"
-              borderRadius="8px"
-              mb="10px"
-            >
-              <ItemContent info="Horizon Design System Free" />
-            </MenuItem>
-          </Flex>
+          
+          {loadingNotifications ? (
+            <Flex justifyContent="center" py="20px">
+              <Text>Cargando notificaciones...</Text>
+            </Flex>
+          ) : (
+            <Flex flexDirection="column">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <MenuItem
+                    key={notification.id}
+                    _hover={{ bg: 'gray.50' }}
+                    _focus={{ bg: 'gray.50' }}
+                    px="10px"
+                    py="12px"
+                    borderRadius="8px"
+                    mb="10px"
+                    bg={notification.type === 'error' ? 'red.50' : 
+                         notification.type === 'info' ? 'blue.50' : 'transparent'}
+                  >
+                    <ItemContent 
+                      info={notification.title}
+                      aName={notification.description}
+                      aTime={notification.time}
+                    />
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem
+                  _hover={{ bg: 'none' }}
+                  _focus={{ bg: 'none' }}
+                  px="0"
+                  borderRadius="8px"
+                  mb="10px"
+                  isDisabled
+                >
+                  <ItemContent info="No hay notificaciones" />
+                </MenuItem>
+              )}
+            </Flex>
+          )}
         </MenuList>
       </Menu>
 
