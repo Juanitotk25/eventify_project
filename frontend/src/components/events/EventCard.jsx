@@ -9,7 +9,7 @@ import moment from "moment";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AttendeeList from "./AttendeeList";
-
+import { eventAPI } from "services/api"; // Importar el servicio API
 
 export default function EventCard({ event }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -59,14 +59,9 @@ export default function EventCard({ event }) {
 
         setIsCheckingRegistration(true);
         try {
-            const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
-            const response = await axios.get(
-                `${API_BASE}/api/events/${event.id}/check_registration/`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
-            setIsRegistered(response.data.is_registered || false);
+            // Usar el servicio API en lugar de axios directamente
+            const response = await eventAPI.checkRegistration(event.id);
+            setIsRegistered(response.is_registered || false);
         } catch (error) {
             console.error("Error checking registration:", error);
             setIsRegistered(false);
@@ -79,21 +74,49 @@ export default function EventCard({ event }) {
         setIsJoining(true);
         const token = localStorage.getItem("access_token");
         if (!token) {
-            toast({ title: "Error", description: "Debes iniciar sesión para inscribirte.", status: "error", duration: 3000, isClosable: true });
+            toast({ 
+                title: "Error", 
+                description: "Debes iniciar sesión para inscribirte.", 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
             setIsJoining(false);
             return;
         }
 
         try {
-            const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
-            await axios.post(`${API_BASE}/api/events/${event.id}/join/`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
+            // Usar el servicio API en lugar de axios directamente
+            await eventAPI.joinEvent(event.id);
+            
+            toast({ 
+                title: "¡Inscripción exitosa!", 
+                description: "Te has inscrito al evento correctamente.", 
+                status: "success", 
+                duration: 3000, 
+                isClosable: true 
             });
-            toast({ title: "¡Inscripción exitosa!", description: "Te has inscrito al evento correctamente.", status: "success", duration: 3000, isClosable: true });
+            
             setIsRegistered(true); // Update registration status
+            
+            // ¡IMPORTANTE: NOTIFICAR A HEADERLINKS QUE SE ACTUALICE!
+            window.dispatchEvent(new CustomEvent('event-joined', { 
+                detail: { eventId: event.id, eventTitle: event.title }
+            }));
+            
+            // También podrías actualizar localmente otros componentes
+            // Por ejemplo, si tienes una lista de "mis eventos"
+            window.dispatchEvent(new Event('registration-updated'));
+            
         } catch (error) {
             const msg = error.response?.data?.detail || "Error al inscribirse al evento.";
-            toast({ title: "Error", description: msg, status: "error", duration: 3000, isClosable: true });
+            toast({ 
+                title: "Error", 
+                description: msg, 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
         } finally {
             setIsJoining(false);
         }
@@ -236,7 +259,11 @@ export default function EventCard({ event }) {
                 isOpen={isAttendeeListOpen}
                 onClose={onAttendeeListClose}
                 eventId={event.id}
-                onUserJoined={() => setIsRegistered(true)} 
+                onUserJoined={() => {
+                    setIsRegistered(true);
+                    // También notificar cuando se une desde AttendeeList
+                    window.dispatchEvent(new CustomEvent('event-joined'));
+                }}
             />
         </>
     );
