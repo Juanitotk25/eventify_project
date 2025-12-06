@@ -2,7 +2,10 @@
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from event_management.models import EventRegistration  # Importamos el modelo de eventos
 from .serializers import UserSerializer  # Aún no existe, la crearemos
+
 
 class RegisterView(generics.CreateAPIView):
     # Permite que cualquiera (no autenticado) pueda registrarse
@@ -19,3 +22,30 @@ class RegisterView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+
+class UserEventCountView(APIView):
+    """
+    View para obtener el número de eventos en los que el usuario está inscrito.
+    Se usará para el icono de notificaciones.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            # Contar las inscripciones del usuario actual
+            count = EventRegistration.objects.filter(
+                user=request.user.profile
+            ).count()
+            
+            return Response({
+                "event_count": count,
+                "user_id": request.user.id,
+                "username": request.user.username
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                "event_count": 0,
+                "error": str(e)
+            }, status=status.HTTP_200_OK)  # Devuelve 0 en caso de error

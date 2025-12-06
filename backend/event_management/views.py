@@ -106,3 +106,20 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({"is_registered": is_registered}, status=status.HTTP_200_OK)
         except:
             return Response({"is_registered": False}, status=status.HTTP_200_OK)
+        
+    @action(detail=False, methods=['get'])
+    def my_event_count(self, request):
+        """
+        Get the count of events the current user is registered for.
+        Requires authentication.
+        """
+        if not request.user.is_authenticated:
+            return Response({"count": 0}, status=status.HTTP_200_OK)
+        
+        try:
+            count = EventRegistration.objects.filter(
+                user=request.user.profile
+            ).count()
+            return Response({"count": count}, status=status.HTTP_200_OK)
+        except:
+            return Response({"count": 0}, status=status.HTTP_200_OK)
