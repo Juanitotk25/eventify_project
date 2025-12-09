@@ -147,7 +147,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny', # Permite acceso por defecto hasta que implementes seguridad
     ),
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend')
+    'DEFAULT_FILTER_BACKENDS': (
+    'django_filters.rest_framework.DjangoFilterBackend',
+    )
 }
 
 # Configuración de Simple JWT
@@ -159,7 +161,4 @@ SIMPLE_JWT = {
     # Tiempo que dura el token de refresco (para obtener un nuevo token de acceso)
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     
-    # Esto es vital para el flujo de trabajo: el campo que se usa para iniciar sesión.
-    # Si usas el modelo User por defecto de Django, esto NO es estrictamente necesario,
-    # pero si usas el email como nombre de usuario, el frontend debe enviar 'username' con el valor del email.
 }

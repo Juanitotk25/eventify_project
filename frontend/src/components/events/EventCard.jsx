@@ -1,18 +1,32 @@
 import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
-    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useColorModeValue
+    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, 
+    Button, useColorModeValue, useToast
 } from "@chakra-ui/react";
-import { MdPeople } from "react-icons/md";
+import { MdPeople, MdList } from "react-icons/md";
 import moment from "moment";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import AttendeeList from "./AttendeeList";
+import { eventAPI } from "services/api"; // Importar el servicio API
 
 export default function EventCard({ event }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const { 
+        isOpen: isAttendeeListOpen, 
+        onOpen: onAttendeeListOpen, 
+        onClose: onAttendeeListClose 
+    } = useDisclosure();
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
     const cardBg = useColorModeValue("white", "navy.700");
+    const toast = useToast();
+    const [isJoining, setIsJoining] = useState(false);
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
+
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
         4: "Académico",
@@ -27,6 +41,85 @@ export default function EventCard({ event }) {
             return id.charAt(0).toUpperCase() + id.slice(1);
         }
         return CATEGORY_MAP[id] || "General";
+    };
+
+    // Check if user is registered when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            checkRegistrationStatus();
+        }
+    }, [isOpen, event.id]);
+
+    const checkRegistrationStatus = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setIsRegistered(false);
+            return;
+        }
+
+        setIsCheckingRegistration(true);
+        try {
+            // Usar el servicio API en lugar de axios directamente
+            const response = await eventAPI.checkRegistration(event.id);
+            setIsRegistered(response.is_registered || false);
+        } catch (error) {
+            console.error("Error checking registration:", error);
+            setIsRegistered(false);
+        } finally {
+            setIsCheckingRegistration(false);
+        }
+    };
+
+    const handleJoin = async () => {
+        setIsJoining(true);
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            toast({ 
+                title: "Error", 
+                description: "Debes iniciar sesión para inscribirte.", 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
+            setIsJoining(false);
+            return;
+        }
+
+        try {
+            // Usar el servicio API en lugar de axios directamente
+            await eventAPI.joinEvent(event.id);
+            
+            toast({ 
+                title: "¡Inscripción exitosa!", 
+                description: "Te has inscrito al evento correctamente.", 
+                status: "success", 
+                duration: 3000, 
+                isClosable: true 
+            });
+            
+            setIsRegistered(true); // Update registration status
+            
+            // ¡IMPORTANTE: NOTIFICAR A HEADERLINKS QUE SE ACTUALICE!
+            window.dispatchEvent(new CustomEvent('event-joined', { 
+                detail: { eventId: event.id, eventTitle: event.title }
+            }));
+            
+            // También podrías actualizar localmente otros componentes
+            // Por ejemplo, si tienes una lista de "mis eventos"
+            window.dispatchEvent(new Event('registration-updated'));
+            
+        } catch (error) {
+            const msg = error.response?.data?.detail || "Error al inscribirse al evento.";
+            toast({ 
+                title: "Error", 
+                description: msg, 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
+        } finally {
+            setIsJoining(false);
+        }
     };
 
     return (
@@ -107,7 +200,7 @@ export default function EventCard({ event }) {
                             textColor={textColor}
                             fontSize="lg"
                             direction="column"
-                            >
+                        >
                             <Text mb="2">
                                 <strong>Fecha:</strong>{" "}
                                 {event.start_time
@@ -132,23 +225,46 @@ export default function EventCard({ event }) {
                     <ModalFooter>
                         <Flex
                             direction="row"
-                            gap={10}
-                            justifyContent="space-between"
-                            grow={1}
-                            px={10}
+                            gap={3}
+                            justifyContent="flex-end"
+                            w="100%"
+                        >
+                            <Button
+                                colorScheme="green"
+                                onClick={handleJoin}
+                                isLoading={isJoining}
+                                loadingText="Inscribiendo..."
+                                fontSize="md"
+                                isDisabled={isRegistered}
                             >
-                            <Button colorScheme="green" onClick={onClose}
-                            fontSize="lg" gap={2}>
-                                Unirme
-                                <Box as={MdPeople} color={textColor} mr="1" />
+                                {isRegistered ? "Ya estás inscrito" : "Unirme"}
+                                <Box as={MdPeople} ml={2} />
                             </Button>
-                            <Button colorScheme="red" onClick={onClose}>
-                                Cerrar
+                            <Button
+                                colorScheme="blue"
+                                onClick={onAttendeeListOpen}
+                                isDisabled={!isRegistered && !isCheckingRegistration}
+                                fontSize="md"
+                            >
+                                Ver Asistentes
+                                <Box as={MdList} ml={2} />
                             </Button>
                         </Flex>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            {/* Attendee List Modal */}
+            <AttendeeList
+                isOpen={isAttendeeListOpen}
+                onClose={onAttendeeListClose}
+                eventId={event.id}
+                onUserJoined={() => {
+                    setIsRegistered(true);
+                    // También notificar cuando se une desde AttendeeList
+                    window.dispatchEvent(new CustomEvent('event-joined'));
+                }}
+            />
         </>
     );
 }

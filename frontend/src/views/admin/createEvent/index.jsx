@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 // Importaciones de Chakra UI
 import {
@@ -11,9 +12,11 @@ import {
     SimpleGrid,
     Text,
     Textarea,
+    Switch,
     useColorModeValue,
     Box,
     useToast, 
+    FormHelperText,
 } from "@chakra-ui/react";
 
 // Componentes personalizados
@@ -22,7 +25,8 @@ import Card from "components/card/Card.js";
 // **********************************************
 // URL de la API
 // **********************************************
-const API_BASE_URL = 'http://localhost:8000/api/events'; 
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+const API_BASE_URL = `${API_BASE}/api/events`; 
 
 // 🚀 CAMBIO CLAVE: Acepta 'initialEvent' como prop.
 export default function EventForm({ initialEvent, onSuccess, onCancel }) { 
@@ -35,42 +39,75 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         location: "",
         description: "",
         capacity: "",
+        cover_url: "",
+        is_public: true,
     });
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
     const textColor = useColorModeValue("secondaryGray.900", "white");
 
+
     // 2. Efecto para cargar los datos del evento si estamos editando
     useEffect(() => {
         if (initialEvent) {
             // Transformar datos de Django (snake_case) a React (camelCase)
+            // Para datetime-local necesitamos formato YYYY-MM-DDTHH:MM
+            const formatDateTime = (isoString) => {
+                if (!isoString) return "";
+                return isoString.slice(0, 16); // Toma "YYYY-MM-DDTHH:MM"
+            };
+
             setFormData({
                 title: initialEvent.title || "",
                 // Asegúrate de que category sea un string, aunque contenga el ID (ej: "4")
                 category: initialEvent.category ? String(initialEvent.category) : "", 
-                // Asegúrate de que las fechas sean solo 'YYYY-MM-DD' para el input type="date"
-                startDate: initialEvent.start_time ? initialEvent.start_time.split('T')[0] : "",
-                endDate: initialEvent.end_time ? initialEvent.end_time.split('T')[0] : "",
+                startDate: formatDateTime(initialEvent.start_time),
+                endDate: formatDateTime(initialEvent.end_time),
                 location: initialEvent.location || "",
                 description: initialEvent.description || "",
                 capacity: initialEvent.capacity ? String(initialEvent.capacity) : "",
+                cover_url: initialEvent.cover_url || "",
+                is_public: initialEvent.is_public !== undefined ? initialEvent.is_public : true,
             });
         }
     }, [initialEvent]);
 
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: type === "checkbox" ? checked : value,
         }));
     };
 
     // 🚀 LÓGICA DE ENVÍO Y EDICIÓN (Maneja POST y PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // --- VALIDACIONES ---
+        // 1. Campos obligatorios (excepto opcionales)
+        if (!formData.title || !formData.location || !formData.capacity || !formData.startDate) {
+             toast({ title: "Error de validación", description: "Por favor complete todos los campos obligatorios.", status: "error", duration: 5000, isClosable: true });
+             return;
+        }
+
+        // 2. Fecha del evento posterior a la actual
+        const start = new Date(formData.startDate);
+        const now = new Date();
+        if (start <= now) {
+            toast({ title: "Fecha inválida", description: "La fecha del evento debe ser posterior a la fecha actual.", status: "error", duration: 5000, isClosable: true });
+            return;
+        }
+
+        // 3. Descripción mínimo 7 caracteres (si se provee)
+        if (formData.description && formData.description.length < 7) {
+             toast({ title: "Descripción muy corta", description: "La descripción debe tener mínimo 7 caracteres.", status: "error", duration: 5000, isClosable: true });
+             return;
+        }
+        // --------------------
+
         setIsSubmitting(true);
         
         const token = localStorage.getItem('access_token'); 
@@ -88,15 +125,21 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         
         const dataToSend = {
             title: formData.title,
-            // Asegúrate de que el valor sea numérico o el string que espera tu serializer
-            category: parseInt(formData.category, 10), 
+            // Si category es string vacío, enviamos null o no lo enviamos si el backend lo permite. 
+            // Asumiremos que el backend acepta null si es opcional, o int.
+            category: formData.category ? parseInt(formData.category, 10) : null, 
             start_time: formData.startDate, 
-            end_time: formData.endDate, 
+            end_time: formData.endDate || null, // End date es opcional en el modelo pero buena práctica enviarlo si existe
             location: formData.location,
             description: formData.description,
             capacity: parseInt(formData.capacity, 10),
-            // Si el PUT requiere todos los campos, asegúrate de que ninguno sea nulo/vacío
+            is_public: formData.is_public,
         };
+
+        // Add cover_url only if it has a value
+        if (formData.cover_url.trim()) {
+            dataToSend.cover_url = formData.cover_url.trim();
+        }
 
         console.log(`Enviando ${method} a ${url} con datos:`, dataToSend);
         
@@ -130,6 +173,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                     setFormData({
                         title: "", category: "", startDate: "", endDate: "",
                         location: "", description: "", capacity: "",
+                        cover_url: "", is_public: true,
                     });
                 }
             } else {
@@ -181,20 +225,28 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                         </Text>
 
                         {/* Título */}
-                        <FormControl mb="20px">
+                        <FormControl mb="20px" isRequired>
                             <FormLabel htmlFor="title" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                Título del Evento<Text color="brand.500">*</Text>
+                                Título del Evento
                             </FormLabel>
                             <Input id="title" name="title" type="text" placeholder="Nombre del evento" onChange={handleChange} value={formData.title} variant="main" h="44px"/>
                         </FormControl>
 
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mb="20px">
-                            {/* Categoría */}
+                            {/* Categoría (Opcional según requerimientos) */}
                             <FormControl>
                                 <FormLabel htmlFor="category" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                    Categoría<Text color="brand.500">*</Text>
+                                    Categoría
                                 </FormLabel>
-                                <Select id="category" name="category" placeholder="Seleccionar categoría" onChange={handleChange} value={formData.category} variant="main" h="44px">
+                                <Select 
+                                    id="category" 
+                                    name="category" 
+                                    placeholder="Seleccionar categoría" 
+                                    onChange={handleChange} 
+                                    value={formData.category ? String(formData.category) : ""} 
+                                    variant="main" 
+                                    h="44px"
+                                >
                                     <option value="4">Académico</option>
                                     <option value="5">Cultural</option>
                                     <option value="6">Deportivo</option>
@@ -204,7 +256,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             </FormControl>
 
                             {/* Capacidad */}
-                            <FormControl>
+                            <FormControl isRequired>
                                 <FormLabel htmlFor="capacity" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Capacidad
                                 </FormLabel>
@@ -212,10 +264,10 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             </FormControl>
                         </SimpleGrid>
 
-                        {/* Descripción */}
+                        {/* Descripción (Opcional) */}
                         <FormControl>
                             <FormLabel htmlFor="description" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                Descripción<Text color="brand.500">*</Text>
+                                Descripción
                             </FormLabel>
                             <Textarea id="description" name="description" placeholder="Describe el evento..." onChange={handleChange} value={formData.description} variant="main" rows={6}/>
                         </FormControl>
@@ -229,28 +281,70 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
 
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mb="20px">
                             {/* Fecha Inicio */}
-                            <FormControl>
+                            <FormControl isRequired>
                                 <FormLabel htmlFor="startDate" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                    Fecha Inicio<Text color="brand.500">*</Text>
+                                    Fecha Inicio
                                 </FormLabel>
-                                <Input id="startDate" name="startDate" type="date" onChange={handleChange} value={formData.startDate} variant="main" h="44px"/>
+                                <Input id="startDate" name="startDate" type="datetime-local" onChange={handleChange} value={formData.startDate} variant="main" h="44px"/>
                             </FormControl>
 
                             {/* Fecha Fin */}
                             <FormControl>
                                 <FormLabel htmlFor="endDate" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                    Fecha Fin<Text color="brand.500">*</Text>
+                                    Fecha Fin
                                 </FormLabel>
-                                <Input id="endDate" name="endDate" type="date" onChange={handleChange} value={formData.endDate} variant="main" h="44px"/>
+                                <Input id="endDate" name="endDate" type="datetime-local" onChange={handleChange} value={formData.endDate} variant="main" h="44px"/>
                             </FormControl>
                         </SimpleGrid>
 
                         {/* Ubicación */}
-                        <FormControl mb="20px">
+                        <FormControl mb="20px" isRequired>
                             <FormLabel htmlFor="location" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                Ubicación<Text color="brand.500">*</Text>
+                                Ubicación
                             </FormLabel>
                             <Input id="location" name="location" type="text" placeholder="Lugar del evento" onChange={handleChange} value={formData.location} variant="main" h="44px"/>
+                        </FormControl>
+
+                        {/* Cover Image URL */}
+                        <FormControl mb="20px">
+                            <FormLabel htmlFor="cover_url" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
+                                URL de Imagen de Portada
+                            </FormLabel>
+                            <Input 
+                                id="cover_url" 
+                                name="cover_url" 
+                                type="url" 
+                                placeholder="https://ejemplo.com/imagen.jpg" 
+                                onChange={handleChange} 
+                                value={formData.cover_url} 
+                                variant="main" 
+                                h="44px"
+                            />
+                            <FormHelperText fontSize="xs" color="gray.500" mt="4px">
+                                URL de una imagen para tu evento (opcional)
+                            </FormHelperText>
+                        </FormControl>
+
+                        {/* Public Event Toggle */}
+                        <FormControl display="flex" alignItems="center" mb="20px">
+                            <Switch
+                                name="is_public"
+                                isChecked={formData.is_public}
+                                onChange={(e) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        is_public: e.target.checked,
+                                    }));
+                                }}
+                                colorScheme="brand"
+                                size="lg"
+                            />
+                            <FormLabel htmlFor="is_public" fontSize="sm" fontWeight="500" color={textColor} mb="0" ml="15px">
+                                Evento público
+                            </FormLabel>
+                            <Text fontSize="xs" color="gray.500" ml="10px">
+                                Los eventos públicos son visibles para todos
+                            </Text>
                         </FormControl>
                     </Card>
                 </SimpleGrid>

@@ -11,8 +11,8 @@ import {
     Box
 } from '@chakra-ui/react';
 
-// Asegúrate de que esta ruta sea correcta:
-import EventForm from '../../views/admin/createEvent/index'; 
+// Import the EventForm component
+import EventForm from './EventForm'; 
 
 // Recibe las props del componente EventList
 export default function EventFormModal({ isOpen, onClose, currentEvent, fetchEvents }) {
@@ -52,6 +52,7 @@ export default function EventFormModal({ isOpen, onClose, currentEvent, fetchEve
                             initialEvent={currentEvent} // **CLAVE:** Pasa el objeto del evento. Si es null, es Creación.
                             onSuccess={handleSuccess}   // **CLAVE:** Llama a recarga y cierre
                             onCancel={onClose}          // Cierra el modal si se pulsa Cancelar
+                            isModal={true}              // Indica que está dentro de un modal
                         />
                     </Box>
                 </ModalBody>
