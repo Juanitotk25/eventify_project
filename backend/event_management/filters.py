@@ -13,7 +13,8 @@ class EventFilter(django_filters.FilterSet):
         fields = {
             "category__name": ["iexact", "icontains"],
             "location": ["icontains"],
-            "start_time": ["gte", "lte"],
+            "start_time": ["gte"],
+            "end_time": ["lte"],
         }
 
     def filter_search(self, qs, name, value):

@@ -10,7 +10,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'organizer', 'category', 'start_time', 'is_public', 'capacity')
+    list_display = ('title', 'organizer', 'category', 'start_time', 'end_time', 'is_public', 'capacity')
     list_filter = ('is_public', 'category', 'start_time', 'created_at')
     search_fields = ('title', 'description', 'location', 'organizer__username')
     readonly_fields = ('id', 'created_at', 'updated_at')
