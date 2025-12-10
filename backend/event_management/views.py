@@ -5,7 +5,7 @@ from .serializers import EventSerializer, CategorySerializer, EventRegistrationS
 from django.db.models import Q, Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EventFilter
-from .models import Event, EventRegistration, Category
+from .models import Event, RegistrationStatus, EventRegistration, Category
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -123,6 +123,49 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({"count": count}, status=status.HTTP_200_OK)
         except:
             return Response({"count": 0}, status=status.HTTP_200_OK)
+        
+    @action(detail=True, methods=['get'])
+    def attendance_report(self, request, pk=None):
+        """
+        Reporte de asistencia para el organizador del evento
+        """
+        event = self.get_object()
+        
+        # Verificar que el usuario es el organizador
+        if event.organizer != request.user.profile:
+            return Response(
+                {"detail": "Solo el organizador puede ver este reporte."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener estadísticas
+        total_registered = event.registrations.count()
+        total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
+        
+        # Lista de asistentes
+        attendees = event.registrations.filter(status=RegistrationStatus.ATTENDED) \
+            .select_related('user') \
+            .values('user__user__username', 'user__user__email', 'user__full_name', 'created_at')
+        
+        # Lista de inscritos no asistentes
+        non_attendees = event.registrations.exclude(status=RegistrationStatus.ATTENDED) \
+            .select_related('user') \
+            .values('user__user__username', 'user__user__email', 'user__full_name', 'status', 'created_at')
+        
+        return Response({
+            "event": {
+                "id": str(event.id),
+                "title": event.title,
+                "start_time": event.start_time,
+            },
+            "statistics": {
+                "total_registered": total_registered,
+                "total_attended": total_attended,
+                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2)
+            },
+            "attendees": list(attendees),
+            "non_attendees": list(non_attendees)
+        })   
 
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
@@ -188,3 +231,86 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             {"detail": "Review saved successfully."},
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=True, methods=["post"])
+    def confirm_attendance(self, request, pk=None):
+        """
+        Confirmar asistencia a un evento
+        """
+        registration = self.get_object()
+        
+        # Verificar que el usuario es quien dice ser
+        if registration.user != request.user.profile:
+            return Response(
+                {"detail": "No tienes permiso para confirmar asistencia en esta inscripción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Cambiar estado a ATTENDED
+        registration.status = RegistrationStatus.ATTENDED
+        registration.save()
+        
+        return Response({
+            "success": True,
+            "message": "Asistencia confirmada exitosamente",
+            "status": registration.status
+        }, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['get'])
+    def attendance_report(self, request, pk=None):
+        """
+        Reporte de asistencia para el organizador del evento
+        """
+        event = self.get_object()
+        
+        # Verificar que el usuario es el organizador
+        if event.organizer != request.user.profile:
+            return Response(
+                {"detail": "Solo el organizador puede ver este reporte."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener estadísticas
+        total_registered = event.registrations.count()
+        total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
+        
+        # Lista de asistentes
+        attendees = event.registrations.filter(status=RegistrationStatus.ATTENDED) \
+            .select_related('user__user') \
+            .values(
+                'id', 
+                'user__user__username', 
+                'user__user__email', 
+                'user__full_name', 
+                'created_at',
+                'status'
+            )
+        
+        # Lista de inscritos no asistentes
+        non_attendees = event.registrations.exclude(status=RegistrationStatus.ATTENDED) \
+            .select_related('user__user') \
+            .values(
+                'id',
+                'user__user__username', 
+                'user__user__email', 
+                'user__full_name', 
+                'status', 
+                'created_at'
+            )
+        
+        return Response({
+            "event": {
+                "id": str(event.id),
+                "title": event.title,
+                "start_time": event.start_time,
+                "organizer": event.organizer.full_name if event.organizer else "N/A"
+            },
+            "statistics": {
+                "total_registered": total_registered,
+                "total_attended": total_attended,
+                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2)
+            },
+            "attendees": list(attendees),
+            "non_attendees": list(non_attendees)
+        })
+
