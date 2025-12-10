@@ -32,7 +32,7 @@ export default function JoinedEvents() {
     const toast = useToast();
 
     const searchIconColor = useColorModeValue("gray.700", "white");
-    const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
+    const inputBg = useColorModeValue("white", "navy.900");
     const inputText = useColorModeValue("gray.700", "gray.100");
 
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
@@ -143,6 +143,7 @@ export default function JoinedEvents() {
             {/* FILTROS */}
             <Flex direction="row" gap={2} py="2vh">
                 <Select
+                    bg={inputBg}
                     placeholder="Categoría"
                     w={{ base: "100%", md: "200px" }}
                     value={category}
@@ -156,6 +157,7 @@ export default function JoinedEvents() {
                 </Select>
 
                 <Input
+                    bg={inputBg}
                     type="date"
                     placeholder="Fecha de Inicio"
                     w={{ base: "100%", md: "200px" }}
@@ -164,6 +166,7 @@ export default function JoinedEvents() {
                 />
 
                 <Input
+                    bg={inputBg}
                     type="date"
                     placeholder="Fecha Final"
                     w={{ base: "100%", md: "200px" }}
@@ -172,6 +175,7 @@ export default function JoinedEvents() {
                 />
 
                 <Input
+                    bg={inputBg}
                     placeholder="Ubicación"
                     w={{ base: "100%", md: "200px" }}
                     value={location}

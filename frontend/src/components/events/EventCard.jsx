@@ -19,7 +19,7 @@ export default function EventCard({ event }) {
         onClose: onAttendeeListClose 
     } = useDisclosure();
     const textColor = useColorModeValue("secondaryGray.900", "white");
-    const titleColor = useColorModeValue("navy.900", "purple.200");
+    const titleColor = useColorModeValue("navy.900", "white");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
     const cardBg = useColorModeValue("white", "navy.700");
     const toast = useToast();
