@@ -235,8 +235,8 @@ export default function EventCard({ event, registrationId}) {
                 <Text fontSize="sm" mb="3">
                     {event.description || "Sin descripción"}
                 </Text>
-                <Flex direction="row" width="full" gap={10}>
-                    <Flex align="center" mt={4} mb={2}>
+                <Flex direction="row" width="full" gap={10} mt="auto">
+                    <Flex align="center" mt="auto" mb={2}>
                         {[1, 2, 3, 4, 5].map((star) => (
                             <Box
                                 key={star}

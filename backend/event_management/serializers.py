@@ -39,5 +39,5 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
    
     class Meta:
         model = EventRegistration
-        fields = ["id", "event", "rating", "comment", "status"]
+        fields = ["id", "event", "rating", "comment", "status", "user_username"]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
