@@ -174,7 +174,7 @@ export default function EventList() {
                 />
                 <Input
                     type="text"
-                    placeholder="Buscar evento por título o ubicación..."
+                    placeholder="Buscar evento..."
                     bg={inputBg}
                     color={inputText}
                     value={search}

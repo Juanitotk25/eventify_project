@@ -7,6 +7,7 @@ import {
   MdHome,
   MdLock,
   MdEvent,
+  MdGroups,
   MdAddCircle
 } from 'react-icons/md';
 
@@ -17,6 +18,7 @@ import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
 import EventList from "views/admin/eventList";
 import CreateEvent from "views/admin/createEvent";
+import JoinedEvents from "views/admin/joinedEvents";
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
@@ -45,6 +47,13 @@ const routes = [
     path: '/dashboard',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <MainDashboard />,
+  },
+  {
+    name: 'Eventos Registrados',
+    layout: '/user',
+    path: '/registered',
+    icon: <Icon as={MdGroups} width="20px" height="20px" color="inherit" />,
+    component: <JoinedEvents />,
   },
   {
     name: "Landing Page",

@@ -77,10 +77,10 @@ function SignIn() {
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
-  const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
+  const googleBg = useColorModeValue("gray.200", "whiteAlpha.200");
   const googleText = useColorModeValue("navy.700", "white");
   const googleHover = useColorModeValue(
-    { bg: "gray.200" },
+    { bg: "purple.200" },
     { bg: "whiteAlpha.300" }
   );
   const googleActive = useColorModeValue(
@@ -155,18 +155,17 @@ function SignIn() {
         maxW={{ base: "100%", md: "max-content" }}
         w='100%'
         mx={{ base: "auto", lg: "0px" }}
-        me='auto'
         h='100%'
         alignItems='start'
         justifyContent='center'
         mb={{ base: "30px", md: "60px" }}
         px={{ base: "25px", md: "5vh" }}
-        mt={{ base: "40px", md: "14vh" }}
+        mt={{ base: "0px", md: "1vh" }}
         flexDirection='column'>
 
         {/* Código de Heading y Text */}
-        <Box me='auto'>
-            <Heading color={textColor} fontSize='36px' mb='10px'>
+        <Box mt='auto'>
+            <Heading color={textColor} fontSize='6xl' mb='10px'>
                 Ingresa
             </Heading>
             <Text
@@ -174,7 +173,7 @@ function SignIn() {
                 ms='4px'
                 color={textColorSecondary}
                 fontWeight='400'
-                fontSize='md'>
+                fontSize='lg'>
                 Ingresa tu correo electrónico y contraseña para ingresar!
             </Text>
         </Box>
@@ -197,6 +196,18 @@ function SignIn() {
             py='15px'
             h='50px'
             borderRadius='16px'
+            _before={{
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              padding: "2px", // border thickness
+              borderRadius: "16px",
+              background: "linear-gradient(90deg, purple, blue)", // your gradient here
+              WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
             bg={googleBg}
             color={googleText}
             fontWeight='500'
@@ -230,6 +241,8 @@ function SignIn() {
               variant='auth'
               fontSize='sm'
               ms={{ base: "0px", md: "0px" }}
+              _hover={{ color: "whiteAlpha.800" }}
+              _focus={{ color: "white" }}
               type='text'
               placeholder='Ingresa tu nombre de usuario'
               mb='24px'

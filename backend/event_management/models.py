@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.db.models import Q, F
 from users.models import Profile
+from django.core.validators import MinValueValidator, MaxValueValidator
 import django_filters
 
 
@@ -80,6 +81,8 @@ class EventRegistration(models.Model):
         choices=RegistrationStatus.choices,
         default=RegistrationStatus.REGISTERED,
     )
+    rating = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

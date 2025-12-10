@@ -1,22 +1,30 @@
 import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
-    ModalHeader, ModalCloseButton, ModalBody, ModalFooter, 
-    Button, useColorModeValue, useToast
+    ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
+    Button, useColorModeValue, useToast, IconButton
 } from "@chakra-ui/react";
 import { MdPeople, MdList } from "react-icons/md";
+import { FaCommentDots } from "react-icons/fa";
 import moment from "moment";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AttendeeList from "./AttendeeList";
+import ReviewModal from "./ReviewModal";
 import { eventAPI } from "services/api"; // Importar el servicio API
 
-export default function EventCard({ event }) {
+
+export default function EventCard({ event, registrationId}) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { 
         isOpen: isAttendeeListOpen, 
         onOpen: onAttendeeListOpen, 
         onClose: onAttendeeListClose 
+    } = useDisclosure();
+    const {
+        isOpen: isReviewOpen,
+        onOpen: onReviewOpen,
+        onClose: onReviewClose
     } = useDisclosure();
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
@@ -26,7 +34,10 @@ export default function EventCard({ event }) {
     const [isJoining, setIsJoining] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
-
+    const [hoverRating, setHoverRating] = useState(0);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+    const rating_avg = event.average_rating || 0;
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
         4: "Académico",
@@ -122,6 +133,53 @@ export default function EventCard({ event }) {
         }
     };
 
+    const handleSubmitReview = async ({ rating, comment }) => {
+        if (!rating) {
+            toast({
+                title: "Oops",
+                description: "Debes seleccionar una calificación.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        setIsSubmittingReview(true);
+
+        try {
+            await axios.patch(
+                `${API_BASE}/api/registrations/${registrationId}/rate/`,
+                { rating, comment},
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                    },
+                }
+            );
+
+            toast({
+                title: "¡Gracias por tu reseña!",
+                description: "Tu opinión ha sido registrada.",
+                status: "success",
+                duration: 3000,
+                isClosable: true
+            });
+
+            onReviewClose();
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo enviar la reseña.",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
     return (
         <>
             {/* Card clickable */}
@@ -133,7 +191,7 @@ export default function EventCard({ event }) {
                 textColor={textColor}
                 boxShadow="md"
                 cursor="pointer"
-                onClick={onOpen}
+                //onClick={onOpen}
                 _hover={{ transform: "scale(1.02)", transition: "0.15s" }}
             >
                 <Image
@@ -177,17 +235,29 @@ export default function EventCard({ event }) {
                 <Text fontSize="sm" mb="3">
                     {event.description || "Sin descripción"}
                 </Text>
-                <Flex align="center" mt="auto">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <Box
-                            key={star}
-                            cursor="pointer"
-                            fontSize="2xl"
-                            color={(event.average_rating) >= star ? "yellow.400" : "gray.400"}
-                        >
-                            ★
-                        </Box>
-                    ))}
+                <Flex direction="row" width="full" gap={10}>
+                    <Flex align="center" mt={4} mb={2}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <Box
+                                key={star}
+                                cursor="pointer"
+                                fontSize="2xl"
+                                color={(rating_avg) >= star ? "yellow.400" : "gray.400"}
+                                //onClick={() => setRating(star)}
+                            >
+                                ★
+                            </Box>
+                        ))}
+                    </Flex>
+                    <IconButton
+                        ml="auto"
+                        mt="auto"
+                        aria-label="Review event"
+                        icon={<FaCommentDots />}
+                        colorScheme="purple"
+                        variant="ghost"
+                        onClick={onReviewOpen}
+                    />
                 </Flex>
             </Card>
 
@@ -276,6 +346,14 @@ export default function EventCard({ event }) {
                     // También notificar cuando se une desde AttendeeList
                     window.dispatchEvent(new CustomEvent('event-joined'));
                 }}
+            />
+
+            {/*Review Modal*/}
+            <ReviewModal
+                isOpen={isReviewOpen}
+                onClose={onReviewClose}
+                onSubmit={handleSubmitReview}
+                event={event}
             />
         </>
     );
