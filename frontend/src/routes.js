@@ -54,7 +54,7 @@ const routes = [
     path: '/registered',
     icon: <Icon as={MdGroups} width="20px" height="20px" color="inherit" />,
     component: <JoinedEvents />,
-  },
+  },/*
   {
     name: "Landing Page",
     layout: "/auth",
@@ -117,7 +117,7 @@ const routes = [
     path: '*',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <NotFound />,
-  },
+  },*/
 ];
 
 export default routes;
