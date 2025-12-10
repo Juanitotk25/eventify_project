@@ -8,8 +8,7 @@ import {
   MdLock,
   MdEvent,
   MdGroups,
-  MdAddCircle,
-  MdAssessment  // AGREGAR ESTE IMPORT
+  MdAddCircle
 } from 'react-icons/md';
 
 // Admin Imports
@@ -20,7 +19,6 @@ import RTL from 'views/admin/rtl';
 import EventList from "views/admin/eventList";
 import CreateEvent from "views/admin/createEvent";
 import JoinedEvents from "views/admin/joinedEvents";
-import ReportsPage from "views/admin/reports/ReportsPage"; // AGREGAR ESTE IMPORT
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
@@ -56,13 +54,6 @@ const routes = [
     path: '/registered',
     icon: <Icon as={MdGroups} width="20px" height="20px" color="inherit" />,
     component: <JoinedEvents />,
-  },
-  {
-    name: 'Reportes',  // NUEVA RUTA
-    layout: '/user',
-    path: '/reports',
-    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
-    component: <ReportsPage />,
   },
   {
     name: "Landing Page",
