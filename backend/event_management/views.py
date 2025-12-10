@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.filters import SearchFilter
 from .serializers import EventSerializer, CategorySerializer, EventRegistrationSerializer
-from django.db.models import Q
+from django.db.models import Q, Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EventFilter
 from .models import Event, EventRegistration, Category
@@ -35,7 +35,7 @@ class EventViewSet(viewsets.ModelViewSet):
         # Filter to show only public events for unauthenticated users
         # Authenticated users can see all events (or filter by 'mine' parameter)
         qs = Event.objects.all().order_by("-start_time")
-
+        qs = qs.annotate(average_rating=Avg("registrations__rating"))
         # If user is not authenticated, only show public events
         if not self.request.user.is_authenticated:
             qs = qs.filter(is_public=True)
@@ -123,3 +123,68 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({"count": count}, status=status.HTTP_200_OK)
         except:
             return Response({"count": 0}, status=status.HTTP_200_OK)
+
+
+class EventRegistrationViewSet(viewsets.ModelViewSet):
+    queryset = EventRegistration.objects.all()
+    serializer_class = EventRegistrationSerializer
+    permission_classes = [IsAuthenticated]
+
+    # Restrict editing to the user who owns the registration
+    def get_queryset(self):
+        return EventRegistration.objects.filter(user=self.request.user.profile)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    @action(detail=False, methods=["get"])
+    def my_events(self, request):
+        user_profile = request.user.profile
+
+        regs = EventRegistration.objects.filter(user=user_profile) \
+            .select_related("event")
+
+        # Apply filters on the *event* but keep registration linked
+        events_qs = (Event.objects.filter(id__in=regs.values("event_id"))
+            .annotate(average_rating=Avg("registrations__rating")))
+        filtered_events = EventFilter(request.GET, queryset=events_qs).qs
+
+        # Build a map: event_id → registration_id
+        reg_map = {str(reg.event_id): str(reg.id) for reg in regs}
+
+        # Serialize events
+        event_data = EventSerializer(filtered_events, many=True).data
+
+        # Inject registration_id into each event
+        for event in event_data:
+            event["registration_id"] = reg_map.get(event["id"], None)
+
+        print("\n=== EVENT DATA SENT TO FRONT ===")
+        print(event_data)  # <-- prints the injected object
+        print("================================\n")
+
+        return Response(event_data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["patch"])
+    def rate(self, request, pk=None):
+        registration = self.get_object()
+
+        rating = request.data.get("rating")
+        comment = request.data.get("comment")
+
+        if rating is None:
+            return Response({"detail": "Rating is required."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not (1 <= int(rating) <= 5):
+            return Response({"detail": "Rating must be between 1 and 5."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        registration.rating = rating
+        registration.comment = comment
+        registration.save()
+
+        return Response(
+            {"detail": "Review saved successfully."},
+            status=status.HTTP_200_OK
+        )

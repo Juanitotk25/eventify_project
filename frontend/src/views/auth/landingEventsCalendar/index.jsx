@@ -125,7 +125,7 @@ export default function LandingEventsCalendar() {
             <Heading
                 size={{ base: "md", md: "lg" }}
                 mb={4}
-                bgGradient="linear(to-r, blue.200, purple.200)"
+                bgGradient="linear(to-r, blue.400, purple.400)"
                 bgClip="text"
                 textAlign="center"
                 fontWeight="extrabold"
@@ -222,6 +222,11 @@ export default function LandingEventsCalendar() {
                         "& .fc-scrollgrid-section > table": {
                             borderColor: borderColor,
                         },
+                        "& .fc-toolbar-title": {
+                            color: textColor,
+                            fontWeight: "700",
+                            fontSize: "1.4rem",
+                        },
                     }}
                 >
                     <FullCalendar
@@ -229,7 +234,11 @@ export default function LandingEventsCalendar() {
                         initialView="dayGridMonth"
                         height="auto"
                         events={events}
-                        headerToolbar={false}
+                        headerToolbar={{
+                            left: "prev",
+                            center: "title",
+                            right: "next"
+                        }}
                         dayMaxEvents={2}
                         fixedWeekCount={false}
                         locale="es"

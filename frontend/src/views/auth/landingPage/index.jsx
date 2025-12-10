@@ -105,7 +105,7 @@ export default function LandingPage() {
                                     Descubre, comparte y participa en los eventos dentro y fuera del
                                     campus. Tu red social universitaria para no perderte nada.
                                 </Text>
-                                <Flex justify="center" gap={4} wrap="wrap">
+                                <Flex justify="center" gap={4} wrap="wrap" mt={8}>
                                     <Button
                                         bg="white"
                                         color="purple.700"
@@ -126,8 +126,7 @@ export default function LandingPage() {
                                     direction="column"
                                     alignItems="center"
                                     justifyContent="center"
-                                    mt={6}
-                                    py="1vh"
+                                    mt={2}
                                 >
                                     <HSeparator />
                                     <Text color="white" mx="14px">
@@ -155,6 +154,15 @@ export default function LandingPage() {
 
 
             {/* Events Calendar - Positioned below login section */}
+            <Text
+                mb={8}
+                px={4}
+                mt={8}
+                fontSize={{ base: "2xl", md: "4xl", lg: "5xl" }}
+                fontWeight="extrabold"
+            >
+                ¡Mira nuestros próximos eventos!
+            </Text>
             <Box
                 width="full"
                 position="relative"

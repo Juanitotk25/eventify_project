@@ -34,7 +34,7 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(EventRegistration)
 class EventRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event', 'status', 'created_at')
+    list_display = ('user', 'event', 'status', 'created_at', 'rating', 'comment')
     list_filter = ('status', 'created_at', 'event__category')
     search_fields = ('user__username', 'event__title')
     readonly_fields = ('id', 'created_at', 'updated_at')
