@@ -1,5 +1,5 @@
 // Chakra imports
-import { Portal, Box, useDisclosure } from '@chakra-ui/react';
+import {Portal, Box, useDisclosure, useColorModeValue} from '@chakra-ui/react';
 import Footer from '../../components/footer/FooterUser.js';
 // Layout components
 import Navbar from 'components/navbar/NavbarAdmin.js';
@@ -10,12 +10,17 @@ import {Navigate, Route, Routes} from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import routes from 'routes.js';
 
+
 // Custom Chakra theme
 export default function Dashboard(props) {
   const { ...rest } = props;
   // states and functions
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
+  const bgGradient = useColorModeValue(
+      "linear(to-br, #e1e3f7, #e3ffff, #f6ccff)",
+      "linear(to-br, #232e82, #091d47, #7b1fff)"
+  );
   // functions for changing the states from components
   const location = useLocation();
   const getRoute = () => {
@@ -122,6 +127,7 @@ export default function Dashboard(props) {
         >
           <Sidebar routes={getSidebarRoutes(routes)} display="none" {...rest} />
           <Box
+            bgGradient={bgGradient}
             float="right"
             minHeight="100vh"
             height="100%"
@@ -155,6 +161,7 @@ export default function Dashboard(props) {
                 pe="20px"
                 minH="100vh"
                 pt="50px"
+
               >
               <Routes>
                 {getRoutes(routes)}
