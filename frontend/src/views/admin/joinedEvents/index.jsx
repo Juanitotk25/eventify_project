@@ -186,10 +186,28 @@ export default function JoinedEvents() {
             {/* LISTA DE EVENTOS */}
             {loading && <Text color="gray.500">Cargando eventos...</Text>}
             {error && !loading && <Text color="red.400">{error}</Text>}
-
             <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
                 {events.map((ev) => (
-                    <EventCardRating key={ev.id} event={ev} registrationId={ev.registration_id}/>
+                    <EventCardRating 
+                    key={ev.id} 
+                    event={ev} 
+                    registrationId={ev.registration_id}
+                    status={ev.registration_status || ev.status}  // ← Añade esto
+                    onAttendanceConfirmed={(eventId) => {
+                        // Actualizar el estado local cuando se confirma asistencia
+                        setEvents(prevEvents => 
+                        prevEvents.map(event => 
+                            event.id === eventId 
+                            ? { 
+                                ...event, 
+                                registration_status: 'attended',
+                                status: 'attended' 
+                                }
+                            : event
+                        )
+                        );
+                    }}
+                    />
                 ))}
             </SimpleGrid>
 

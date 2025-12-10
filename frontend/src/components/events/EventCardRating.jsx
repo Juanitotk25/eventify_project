@@ -2,9 +2,9 @@ import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
     ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
-    Button, useColorModeValue, useToast, IconButton
+    Button, useColorModeValue, useToast, IconButton, Badge
 } from "@chakra-ui/react";
-import { MdPeople, MdList } from "react-icons/md";
+import { MdPeople, MdList, MdCheckCircle } from "react-icons/md";
 import { FaCommentDots } from "react-icons/fa";
 import moment from "moment";
 import React, { useState, useEffect } from "react";
@@ -14,7 +14,7 @@ import ReviewModal from "./ReviewModal";
 import { eventAPI } from "services/api"; // Importar el servicio API
 
 
-export default function EventCard({ event, registrationId}) {
+export default function EventCardRating({ event, registrationId, status: propStatus, onAttendanceConfirmed }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { 
         isOpen: isAttendeeListOpen, 
@@ -28,7 +28,7 @@ export default function EventCard({ event, registrationId}) {
     } = useDisclosure();
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
-    const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
+    const accentColor = useColorModeValue("secondaryGray.500", "purple.200");
     const cardBg = useColorModeValue("white", "navy.700");
     const toast = useToast();
     const [isJoining, setIsJoining] = useState(false);
@@ -36,8 +36,11 @@ export default function EventCard({ event, registrationId}) {
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
     const [hoverRating, setHoverRating] = useState(0);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [isConfirmingAttendance, setIsConfirmingAttendance] = useState(false);
+    const [attendanceStatus, setAttendanceStatus] = useState(propStatus || 'registered');
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
     const rating_avg = event.average_rating || 0;
+    
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
         4: "Académico",
@@ -60,6 +63,13 @@ export default function EventCard({ event, registrationId}) {
             checkRegistrationStatus();
         }
     }, [isOpen, event.id]);
+
+    // Actualizar estado de asistencia cuando cambia la prop
+    useEffect(() => {
+        if (propStatus) {
+            setAttendanceStatus(propStatus);
+        }
+    }, [propStatus]);
 
     const checkRegistrationStatus = async () => {
         const token = localStorage.getItem("access_token");
@@ -133,6 +143,61 @@ export default function EventCard({ event, registrationId}) {
         }
     };
 
+    const handleConfirmAttendance = async () => {
+        if (!registrationId) {
+            toast({
+                title: "Error",
+                description: "No se encontró el registro para este evento.",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        setIsConfirmingAttendance(true);
+        try {
+            const token = localStorage.getItem("access_token");
+            const response = await axios.post(
+                `${API_BASE}/api/registrations/${registrationId}/confirm_attendance/`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            toast({
+                title: "¡Asistencia confirmada!",
+                description: response.data.message || "Tu asistencia ha sido registrada.",
+                status: "success",
+                duration: 3000,
+                isClosable: true
+            });
+
+            setAttendanceStatus('attended');
+            
+            // Notificar al componente padre
+            if (onAttendanceConfirmed) {
+                onAttendanceConfirmed(event.id);
+            }
+
+        } catch (error) {
+            console.error('Error al confirmar asistencia:', error);
+            toast({
+                title: "Error",
+                description: error.response?.data?.detail || "No se pudo confirmar la asistencia",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+        } finally {
+            setIsConfirmingAttendance(false);
+        }
+    };
+
     const handleSubmitReview = async ({ rating, comment }) => {
         if (!rating) {
             toast({
@@ -180,6 +245,24 @@ export default function EventCard({ event, registrationId}) {
         }
     };
 
+    // Determinar color y texto del badge de asistencia
+    const getAttendanceBadgeProps = () => {
+        switch(attendanceStatus) {
+            case 'attended':
+                return { colorScheme: 'green', text: 'Asistencia Confirmada' };
+            case 'confirmed':
+                return { colorScheme: 'blue', text: 'Inscripción Confirmada' };
+            case 'cancelled':
+                return { colorScheme: 'red', text: 'Cancelado' };
+            case 'waitlisted':
+                return { colorScheme: 'yellow', text: 'En Lista de Espera' };
+            default:
+                return { colorScheme: 'blue', text: 'Inscrito' };
+        }
+    };
+
+    const badgeProps = getAttendanceBadgeProps();
+
     return (
         <>
             {/* Card clickable */}
@@ -191,7 +274,7 @@ export default function EventCard({ event, registrationId}) {
                 textColor={textColor}
                 boxShadow="md"
                 cursor="pointer"
-                //onClick={onOpen}
+                onClick={onOpen}
                 _hover={{ transform: "scale(1.02)", transition: "0.15s" }}
             >
                 <Image
@@ -204,22 +287,28 @@ export default function EventCard({ event, registrationId}) {
                     mb="4"
                 />
 
-                <Flex justify="space-between" align="center" mb="2">
-                    <Tag
-                        size="sm"
-                        colorScheme={useColorModeValue("brand", "gray")}
-                        fontWeight="bold"
-                    >
-                        {getCategoryName(event.category)}
-                    </Tag>
-
-                    <Flex align="center">
-                        <Box as={MdPeople} color={accentColor} mr="1" />
-                        <Text color={accentColor} fontSize="sm" fontWeight="bold">
-                            {event.capacity || "N/A"} personas
-                        </Text>
+                {/* Badge de estado de asistencia */}
+                {registrationId && (
+                    <Flex justify="space-between" align="center" mb="2">
+                        <Badge
+                            colorScheme={badgeProps.colorScheme}
+                            fontSize="xs"
+                            borderRadius="full"
+                            px="10px"
+                            py="2px"
+                        >
+                            {badgeProps.text}
+                        </Badge>
+                        
+                        <Tag
+                            size="sm"
+                            colorScheme={useColorModeValue("brand", "gray")}
+                            fontWeight="bold"
+                        >
+                            {getCategoryName(event.category)}
+                        </Tag>
                     </Flex>
-                </Flex>
+                )}
 
                 <Text fontSize="xl" fontWeight="700" textColor={titleColor}>
                     {event.title}
@@ -235,6 +324,48 @@ export default function EventCard({ event, registrationId}) {
                 <Text fontSize="sm" mb="3">
                     {event.description || "Sin descripción"}
                 </Text>
+
+                {/* Información de capacidad */}
+                <Flex justify="space-between" align="center" mb="3">
+                    <Flex align="center">
+                        <Box as={MdPeople} color={accentColor} mr="1" />
+                        <Text color={accentColor} fontSize="sm" fontWeight="bold">
+                            {event.capacity || "N/A"} personas
+                        </Text>
+                    </Flex>
+                </Flex>
+
+                {/* Botón de confirmar asistencia (solo si está registrado y no ha confirmado) */}
+                {registrationId && attendanceStatus !== 'attended' && (
+                    <Button
+                        leftIcon={<MdCheckCircle />}
+                        colorScheme="green"
+                        variant="solid"
+                        width="100%"
+                        size="sm"
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevenir que se abra el modal
+                            handleConfirmAttendance();
+                        }}
+                        isLoading={isConfirmingAttendance}
+                        loadingText="Confirmando..."
+                        mb="3"
+                    >
+                        Confirmar Asistencia
+                    </Button>
+                )}
+
+                {/* Si ya confirmó asistencia, mostrar mensaje */}
+                {registrationId && attendanceStatus === 'attended' && (
+                    <Flex align="center" justify="center" mb="3" p="2" bg="green.50" borderRadius="md">
+                        <MdCheckCircle color="green" />
+                        <Text ml="2" fontSize="sm" color="green.600" fontWeight="medium">
+                            ¡Ya confirmaste tu asistencia!
+                        </Text>
+                    </Flex>
+                )}
+
+                {/* Rating y botón de reseña */}
                 <Flex direction="row" width="full" gap={10} mt="auto">
                     <Flex align="center" mt="auto" mb={2}>
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -256,7 +387,10 @@ export default function EventCard({ event, registrationId}) {
                         icon={<FaCommentDots />}
                         colorScheme="purple"
                         variant="ghost"
-                        onClick={onReviewOpen}
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevenir que se abra el modal
+                            onReviewOpen();
+                        }}
                     />
                 </Flex>
             </Card>
@@ -278,6 +412,22 @@ export default function EventCard({ event, registrationId}) {
                             objectFit="cover"
                             mb="4"
                         />
+                        
+                        {/* Estado de asistencia en el modal */}
+                        {registrationId && (
+                            <Flex justify="center" mb="4">
+                                <Badge
+                                    colorScheme={badgeProps.colorScheme}
+                                    fontSize="md"
+                                    borderRadius="full"
+                                    px="20px"
+                                    py="5px"
+                                >
+                                    {badgeProps.text}
+                                </Badge>
+                            </Flex>
+                        )}
+
                         <Flex
                             textColor={textColor}
                             fontSize="lg"
@@ -306,31 +456,50 @@ export default function EventCard({ event, registrationId}) {
 
                     <ModalFooter>
                         <Flex
-                            direction="row"
+                            direction="column"
                             gap={3}
                             justifyContent="flex-end"
                             w="100%"
                         >
-                            <Button
-                                colorScheme="green"
-                                onClick={handleJoin}
-                                isLoading={isJoining}
-                                loadingText="Inscribiendo..."
-                                fontSize="md"
-                                isDisabled={isRegistered}
-                            >
-                                {isRegistered ? "Ya estás inscrito" : "Unirme"}
-                                <Box as={MdPeople} ml={2} />
-                            </Button>
-                            <Button
-                                colorScheme="blue"
-                                onClick={onAttendeeListOpen}
-                                isDisabled={!isRegistered && !isCheckingRegistration}
-                                fontSize="md"
-                            >
-                                Ver Asistentes
-                                <Box as={MdList} ml={2} />
-                            </Button>
+                            {/* Botón de confirmar asistencia en el modal */}
+                            {registrationId && attendanceStatus !== 'attended' && (
+                                <Button
+                                    leftIcon={<MdCheckCircle />}
+                                    colorScheme="green"
+                                    onClick={handleConfirmAttendance}
+                                    isLoading={isConfirmingAttendance}
+                                    loadingText="Confirmando..."
+                                    width="100%"
+                                    size="lg"
+                                >
+                                    Confirmar Mi Asistencia
+                                </Button>
+                            )}
+
+                            <Flex direction="row" gap={3} w="100%">
+                                <Button
+                                    colorScheme="teal"
+                                    onClick={handleJoin}
+                                    isLoading={isJoining}
+                                    loadingText="Inscribiendo..."
+                                    fontSize="md"
+                                    isDisabled={isRegistered || registrationId}
+                                    flex="1"
+                                >
+                                    {isRegistered || registrationId ? "Ya estás inscrito" : "Unirme"}
+                                    <Box as={MdPeople} ml={2} />
+                                </Button>
+                                <Button
+                                    colorScheme="blue"
+                                    onClick={onAttendeeListOpen}
+                                    isDisabled={!isRegistered && !isCheckingRegistration && !registrationId}
+                                    fontSize="md"
+                                    flex="1"
+                                >
+                                    Ver Asistentes
+                                    <Box as={MdList} ml={2} />
+                                </Button>
+                            </Flex>
                         </Flex>
                     </ModalFooter>
                 </ModalContent>
