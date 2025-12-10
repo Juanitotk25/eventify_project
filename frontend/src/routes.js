@@ -58,13 +58,6 @@ const routes = [
     component: <JoinedEvents />,
   },
   {
-    name: 'Reportes',  // NUEVA RUTA
-    layout: '/user',
-    path: '/reports',
-    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
-    component: <ReportsPage />,
-  },
-  {
     name: "Landing Page",
     layout: "/auth",
     path: "/home",
@@ -72,11 +65,11 @@ const routes = [
     component: <LandingPage />,
   },
   {
-    name: 'Data Tables',
+    name: 'Reportes',  // Cambia el nombre
     layout: '/user',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    path: '/data-tables',
-    component: <DataTables />,
+    path: '/data-tables',  // Mantén el mismo path
+    component: <ReportsPage />,  // Cambia el componente
   },
   {
     name: 'Profile',
