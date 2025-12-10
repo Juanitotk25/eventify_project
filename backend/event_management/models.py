@@ -81,13 +81,6 @@ class EventRegistration(models.Model):
         choices=RegistrationStatus.choices,
         default=RegistrationStatus.REGISTERED,
     )
-
-     # Campo para notificaciones (para el badge de notificaciones)
-    notification_read = models.BooleanField(default=False)
-    
-    # Campo para reportes de asistencia
-    attended = models.BooleanField(default=False)  # Si asistió o no
-
     rating = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -103,24 +96,7 @@ class EventRegistration(models.Model):
         indexes = [
             models.Index(fields=["event"], name="idx_registrations_event"),
             models.Index(fields=["user"], name="idx_registrations_user"),
-            models.Index(fields=["user", "notification_read"], name="idx_user_notification_read"),
-            models.Index(fields=["event", "attended"], name="idx_event_attended"),
         ]
 
     def __str__(self) -> str:
         return f"{self.user} → {self.event} ({self.status})"
-
-    # Método útil para reportes
-    def get_attendance_status_display(self):
-        """Obtener estado de asistencia legible"""
-        if self.attended:
-            return "Asistió"
-        elif self.status == RegistrationStatus.CONFIRMED:
-            return "Confirmado (No asistió)"
-        elif self.status == RegistrationStatus.REGISTERED:
-            return "Registrado"
-        elif self.status == RegistrationStatus.WAITLISTED:
-            return "Lista de espera"
-        elif self.status == RegistrationStatus.CANCELLED:
-            return "Cancelado"
-        return "Desconocido"
