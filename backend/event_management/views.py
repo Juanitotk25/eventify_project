@@ -184,30 +184,45 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
     def my_events(self, request):
         user_profile = request.user.profile
 
+        # Obtener TODOS los registros del usuario con toda la información
         regs = EventRegistration.objects.filter(user=user_profile) \
-            .select_related("event")
+            .select_related("event", "event__category", "event__organizer")
 
-        # Apply filters on the *event* but keep registration linked
-        events_qs = (Event.objects.filter(id__in=regs.values("event_id"))
-            .annotate(average_rating=Avg("registrations__rating")))
+        # Crear un diccionario con toda la información de cada registro
+        reg_info_map = {}
+        for reg in regs:
+            reg_info_map[str(reg.event_id)] = {
+                "registration_id": str(reg.id),
+                "status": reg.status,
+                "rating": reg.rating,
+                "comment": reg.comment,
+                "created_at": reg.created_at,
+                "updated_at": reg.updated_at
+            }
+
+        # Obtener los eventos y aplicar filtros
+        events_qs = Event.objects.filter(id__in=regs.values("event_id")) \
+            .select_related("category", "organizer") \
+            .annotate(average_rating=Avg("registrations__rating"))
+        
+        # Aplicar filtros si existen
         filtered_events = EventFilter(request.GET, queryset=events_qs).qs
 
-        # Build a map: event_id → registration_id
-        reg_map = {str(reg.event_id): str(reg.id) for reg in regs}
-
-        # Serialize events
+        # Serializar eventos
         event_data = EventSerializer(filtered_events, many=True).data
 
-        # Inject registration_id into each event
+        # Inyectar información del registro en cada evento
         for event in event_data:
-            event["registration_id"] = reg_map.get(event["id"], None)
-
-        print("\n=== EVENT DATA SENT TO FRONT ===")
-        print(event_data)  # <-- prints the injected object
-        print("================================\n")
+            reg_info = reg_info_map.get(event["id"], {})
+            event["registration_id"] = reg_info.get("registration_id")
+            event["registration_status"] = reg_info.get("status", RegistrationStatus.REGISTERED)
+            event["rating"] = reg_info.get("rating")
+            event["comment"] = reg_info.get("comment")
+            event["registration_created_at"] = reg_info.get("created_at")
+            event["registration_updated_at"] = reg_info.get("updated_at")
 
         return Response(event_data, status=status.HTTP_200_OK)
-
+    
     @action(detail=True, methods=["patch"])
     def rate(self, request, pk=None):
         registration = self.get_object()

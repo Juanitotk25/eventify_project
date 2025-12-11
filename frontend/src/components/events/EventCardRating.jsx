@@ -26,18 +26,21 @@ export default function EventCardRating({ event, registrationId, status: propSta
         onOpen: onReviewOpen,
         onClose: onReviewClose
     } = useDisclosure();
+    
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200");
     const cardBg = useColorModeValue("white", "navy.700");
+     const tagColorScheme = useColorModeValue("brand", "gray");
     const toast = useToast();
+    
     const [isJoining, setIsJoining] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
-    const [hoverRating, setHoverRating] = useState(0);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isConfirmingAttendance, setIsConfirmingAttendance] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(propStatus || 'registered');
+    
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
     const rating_avg = event.average_rating || 0;
     
@@ -57,19 +60,17 @@ export default function EventCardRating({ event, registrationId, status: propSta
         return CATEGORY_MAP[id] || "General";
     };
 
+    // Actualizar estado de asistencia cuando cambia la prop
+    useEffect(() => {
+        setAttendanceStatus(propStatus || 'registered');
+    }, [propStatus]);
+
     // Check if user is registered when modal opens
     useEffect(() => {
         if (isOpen) {
             checkRegistrationStatus();
         }
     }, [isOpen, event.id]);
-
-    // Actualizar estado de asistencia cuando cambia la prop
-    useEffect(() => {
-        if (propStatus) {
-            setAttendanceStatus(propStatus);
-        }
-    }, [propStatus]);
 
     const checkRegistrationStatus = async () => {
         const token = localStorage.getItem("access_token");
@@ -80,7 +81,6 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
         setIsCheckingRegistration(true);
         try {
-            // Usar el servicio API en lugar de axios directamente
             const response = await eventAPI.checkRegistration(event.id);
             setIsRegistered(response.is_registered || false);
         } catch (error) {
@@ -107,7 +107,6 @@ export default function EventCardRating({ event, registrationId, status: propSta
         }
 
         try {
-            // Usar el servicio API en lugar de axios directamente
             await eventAPI.joinEvent(event.id);
             
             toast({ 
@@ -118,15 +117,10 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 isClosable: true 
             });
             
-            setIsRegistered(true); // Update registration status
-            
-            // ¡IMPORTANTE: NOTIFICAR A HEADERLINKS QUE SE ACTUALICE!
+            setIsRegistered(true);
             window.dispatchEvent(new CustomEvent('event-joined', { 
                 detail: { eventId: event.id, eventTitle: event.title }
             }));
-            
-            // También podrías actualizar localmente otros componentes
-            // Por ejemplo, si tienes una lista de "mis eventos"
             window.dispatchEvent(new Event('registration-updated'));
             
         } catch (error) {
@@ -177,6 +171,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 isClosable: true
             });
 
+            // Actualizar estado local
             setAttendanceStatus('attended');
             
             // Notificar al componente padre
@@ -247,7 +242,9 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
     // Determinar color y texto del badge de asistencia
     const getAttendanceBadgeProps = () => {
-        switch(attendanceStatus) {
+        const status = attendanceStatus.toLowerCase();
+        
+        switch(status) {
             case 'attended':
                 return { colorScheme: 'green', text: 'Asistencia Confirmada' };
             case 'confirmed':
@@ -256,12 +253,14 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 return { colorScheme: 'red', text: 'Cancelado' };
             case 'waitlisted':
                 return { colorScheme: 'yellow', text: 'En Lista de Espera' };
+            case 'registered':
             default:
                 return { colorScheme: 'blue', text: 'Inscrito' };
         }
     };
 
     const badgeProps = getAttendanceBadgeProps();
+    const isAttendanceConfirmed = attendanceStatus.toLowerCase() === 'attended';
 
     return (
         <>
@@ -302,7 +301,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                         
                         <Tag
                             size="sm"
-                            colorScheme={useColorModeValue("brand", "gray")}
+                            colorScheme={tagColorScheme}
                             fontWeight="bold"
                         >
                             {getCategoryName(event.category)}
@@ -321,7 +320,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                     } • {event.location || "Sin ubicación"}
                 </Text>
 
-                <Text fontSize="sm" mb="3">
+                <Text fontSize="sm" mb="3" noOfLines={2}>
                     {event.description || "Sin descripción"}
                 </Text>
 
@@ -336,7 +335,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 </Flex>
 
                 {/* Botón de confirmar asistencia (solo si está registrado y no ha confirmado) */}
-                {registrationId && attendanceStatus !== 'attended' && (
+                {registrationId && !isAttendanceConfirmed && (
                     <Button
                         leftIcon={<MdCheckCircle />}
                         colorScheme="green"
@@ -356,7 +355,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 )}
 
                 {/* Si ya confirmó asistencia, mostrar mensaje */}
-                {registrationId && attendanceStatus === 'attended' && (
+                {registrationId && isAttendanceConfirmed && (
                     <Flex align="center" justify="center" mb="3" p="2" bg="green.50" borderRadius="md">
                         <MdCheckCircle color="green" />
                         <Text ml="2" fontSize="sm" color="green.600" fontWeight="medium">
@@ -374,7 +373,6 @@ export default function EventCardRating({ event, registrationId, status: propSta
                                 cursor="pointer"
                                 fontSize="2xl"
                                 color={(rating_avg) >= star ? "yellow.400" : "gray.400"}
-                                //onClick={() => setRating(star)}
                             >
                                 ★
                             </Box>
@@ -395,7 +393,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 </Flex>
             </Card>
 
-            {/* Modal on click */}
+            {/* Modal del evento */}
             <Modal isOpen={isOpen} onClose={onClose} size="lg" motionPreset="slideInBottom">
                 <ModalOverlay />
                 <ModalContent borderRadius="2xl" p="2">
@@ -462,7 +460,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                             w="100%"
                         >
                             {/* Botón de confirmar asistencia en el modal */}
-                            {registrationId && attendanceStatus !== 'attended' && (
+                            {registrationId && !isAttendanceConfirmed && (
                                 <Button
                                     leftIcon={<MdCheckCircle />}
                                     colorScheme="green"
@@ -512,7 +510,6 @@ export default function EventCardRating({ event, registrationId, status: propSta
                 eventId={event.id}
                 onUserJoined={() => {
                     setIsRegistered(true);
-                    // También notificar cuando se une desde AttendeeList
                     window.dispatchEvent(new CustomEvent('event-joined'));
                 }}
             />

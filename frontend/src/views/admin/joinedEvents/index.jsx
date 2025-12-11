@@ -192,7 +192,7 @@ export default function JoinedEvents() {
                     key={ev.id} 
                     event={ev} 
                     registrationId={ev.registration_id}
-                    status={ev.registration_status || ev.status}  // ← Añade esto
+                    status={ev.registration_status}  // ← ESTE es el campo nuevo que añadimos
                     onAttendanceConfirmed={(eventId) => {
                         // Actualizar el estado local cuando se confirma asistencia
                         setEvents(prevEvents => 
@@ -200,12 +200,20 @@ export default function JoinedEvents() {
                             event.id === eventId 
                             ? { 
                                 ...event, 
-                                registration_status: 'attended',
-                                status: 'attended' 
+                                registration_status: 'attended'  // ← Cambiar a 'attended'
                                 }
                             : event
                         )
                         );
+                        
+                        // Mostrar toast de éxito
+                        toast({
+                        title: "¡Actualizado!",
+                        description: "La asistencia ha sido actualizada en la lista",
+                        status: "info",
+                        duration: 2000,
+                        isClosable: true,
+                        });
                     }}
                     />
                 ))}
