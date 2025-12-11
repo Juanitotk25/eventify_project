@@ -127,7 +127,7 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def attendance_report(self, request, pk=None):
         """
-        Reporte MÍNIMO - Solo números
+        Reporte - Solo usernames de las personas
         """
         event = self.get_object()
         
@@ -138,9 +138,27 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Solo estadísticas básicas - sin listas de usuarios
+        # Estadísticas básicas
         total_registered = event.registrations.count()
         total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
+        
+        # Obtener usernames de forma simple
+        def get_usernames(queryset):
+            usernames = []
+            for reg in queryset.select_related('user__user'):
+                try:
+                    if hasattr(reg.user, 'user') and reg.user.user:
+                        usernames.append(reg.user.user.username)
+                    else:
+                        usernames.append(f"user_{reg.user_id}")
+                except:
+                    usernames.append("usuario")
+            return usernames
+        
+        # Listas de usernames
+        all_usernames = get_usernames(event.registrations.all())
+        attendee_usernames = get_usernames(event.registrations.filter(status=RegistrationStatus.ATTENDED))
+        pending_usernames = get_usernames(event.registrations.exclude(status=RegistrationStatus.ATTENDED))
         
         return Response({
             "event": {
@@ -150,10 +168,19 @@ class EventViewSet(viewsets.ModelViewSet):
             "statistics": {
                 "total_registered": total_registered,
                 "total_attended": total_attended,
-                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2)
+                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2),
+                "pending": total_registered - total_attended
             },
-            "message": "Reporte básico - Listas de usuarios deshabilitadas temporalmente"
-        })   
+            "usernames": {
+                "all": all_usernames,  # Todos los que se unieron
+                "attended": attendee_usernames,  # Los que confirmaron asistencia
+                "pending": pending_usernames  # Los que no han confirmado
+            },
+            "counts": {
+                "unique_users": len(set(all_usernames)),
+                "unique_attended": len(set(attendee_usernames))
+            }
+        })
 
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
@@ -259,61 +286,4 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             "status": registration.status
         }, status=status.HTTP_200_OK)
     
-    @action(detail=True, methods=['get'])
-    def attendance_report(self, request, pk=None):
-        """
-        Reporte de asistencia para el organizador del evento
-        """
-        event = self.get_object()
-        
-        # Verificar que el usuario es el organizador
-        if event.organizer != request.user.profile:
-            return Response(
-                {"detail": "Solo el organizador puede ver este reporte."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Obtener estadísticas
-        total_registered = event.registrations.count()
-        total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
-        
-        # Lista de asistentes
-        attendees = event.registrations.filter(status=RegistrationStatus.ATTENDED) \
-            .select_related('user__user') \
-            .values(
-                'id', 
-                'user__user__username', 
-                'user__user__email', 
-                'user__full_name', 
-                'created_at',
-                'status'
-            )
-        
-        # Lista de inscritos no asistentes
-        non_attendees = event.registrations.exclude(status=RegistrationStatus.ATTENDED) \
-            .select_related('user__user') \
-            .values(
-                'id',
-                'user__user__username', 
-                'user__user__email', 
-                'user__full_name', 
-                'status', 
-                'created_at'
-            )
-        
-        return Response({
-            "event": {
-                "id": str(event.id),
-                "title": event.title,
-                "start_time": event.start_time,
-                "organizer": event.organizer.full_name if event.organizer else "N/A"
-            },
-            "statistics": {
-                "total_registered": total_registered,
-                "total_attended": total_attended,
-                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2)
-            },
-            "attendees": list(attendees),
-            "non_attendees": list(non_attendees)
-        })
-
+    
