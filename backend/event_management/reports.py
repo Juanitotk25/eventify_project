@@ -17,15 +17,15 @@ def admin_reports(request):
     Solo usuarios con role='admin' pueden acceder.
     """
     # 1. Verificar autenticación
-    #if not request.user.is_authenticated:
-      #  return Response({'error': 'No autenticado'}, status=401)
+    if not request.user.is_authenticated:
+        return Response({'error': 'No autenticado'}, status=401)
     
     # 2. Verificar si es admin (usando tu campo role en Profile)
-    #try:
-     #   if request.user.profile.role != 'admin':
-      #      return Response({'error': 'No tienes permisos de administrador'}, status=403)
-    #except Exception as e:
-    #    return Response({'error': f'Error al verificar permisos: {str(e)}'}, status=403)
+    try:
+       if request.user.profile.role != 'admin':
+            return Response({'error': 'No tienes permisos de administrador'}, status=403)
+    except Exception as e:
+       return Response({'error': f'Error al verificar permisos: {str(e)}'}, status=403)
     
     try:
         # 3. Parámetros de filtro
