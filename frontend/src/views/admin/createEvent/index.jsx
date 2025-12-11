@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+
 import axios from "axios";
 
 // Importaciones de Chakra UI
@@ -21,6 +24,7 @@ import {
 
 // Componentes personalizados
 import Card from "components/card/Card.js";
+import { uploadImage } from "utils/uploadImage";
 
 // **********************************************
 // URL de la API
@@ -81,6 +85,23 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
             [name]: type === "checkbox" ? checked : value,
         }));
     };
+
+    const onDrop = useCallback(async (acceptedFiles) => {
+        const file = acceptedFiles[0];
+        if (!file) return;
+
+        const url = await uploadImage(file);
+
+        setFormData(prev => ({
+            ...prev,
+            cover_url: url
+        }));
+    }, []);
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: { "image/*": [] }
+    });
 
     // 🚀 LÓGICA DE ENVÍO Y EDICIÓN (Maneja POST y PUT)
     const handleSubmit = async (e) => {
@@ -307,19 +328,32 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
 
                         {/* Cover Image URL */}
                         <FormControl mb="20px">
-                            <FormLabel htmlFor="cover_url" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
-                                URL de Imagen de Portada
-                            </FormLabel>
-                            <Input 
-                                id="cover_url" 
-                                name="cover_url" 
-                                type="url" 
-                                placeholder="https://ejemplo.com/imagen.jpg" 
-                                onChange={handleChange} 
-                                value={formData.cover_url} 
-                                variant="main" 
-                                h="44px"
-                            />
+                            <FormLabel fontSize="sm">Imagen de Portada</FormLabel>
+
+                            <Box
+                                {...getRootProps()}
+                                border="2px dashed #888"
+                                borderRadius="lg"
+                                p="20px"
+                                textAlign="center"
+                                cursor="pointer"
+                                bg={isDragActive ? "purple.100" : "secondaryGray.200"}
+                            >
+                                <input {...getInputProps()} />
+                                <Text fontSize="sm">
+                                    {isDragActive
+                                        ? "Suelta la imagen aquí"
+                                        : "Arrastra una imagen o haz clic para subirla"}
+                                </Text>
+                            </Box>
+
+                            {formData.cover_url && (
+                                <img
+                                    src={formData.cover_url}
+                                    alt="preview"
+                                    style={{ marginTop: "10px", width: "100%", borderRadius: "8px" }}
+                                />
+                            )}
                             <FormHelperText fontSize="xs" color="gray.500" mt="4px">
                                 URL de una imagen para tu evento (opcional)
                             </FormHelperText>
