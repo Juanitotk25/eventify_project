@@ -1,7 +1,7 @@
 # backend/users/urls.py
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView, UserNotificationsView, CancelRegistrationView, CustomTokenObtainPairView
+from .views import RegisterView, UserNotificationsView, CancelRegistrationView, CustomTokenObtainPairView, ChangePasswordView, UserProfileView
 
 urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -9,4 +9,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('notifications/', UserNotificationsView.as_view(), name='user-notifications'),
     path('cancel-registration/<uuid:registration_id>/', CancelRegistrationView.as_view(), name='cancel-registration'),
+    path("profile/", UserProfileView.as_view(), name='user-profile'),
+    path("profile/change-password/", ChangePasswordView.as_view(), name='change-password'),
 ]

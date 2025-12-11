@@ -555,7 +555,7 @@ export default function HeaderLinks(props) {
                 navigate("/user/profile");
               }}
             >
-              <Text fontSize="sm">Profile Settings</Text>
+              <Text fontSize="sm">Editar Perfil</Text>
             </MenuItem>
             <MenuItem
                 _hover={{ textColor: 'red.700' }}
