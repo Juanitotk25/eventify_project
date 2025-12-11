@@ -24,20 +24,41 @@ class EventSerializer(serializers.ModelSerializer):
 
 class EventRegistrationSerializer(serializers.ModelSerializer):
     user_username = serializers.SerializerMethodField()
+    user_full_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
     
     def get_user_username(self, obj):
-        """
-        Get username from the related User model through Profile.
-        Profile.user -> User (Django's User model)
-        """
+        """Get username from the related User model through Profile."""
         try:
             if obj.user and hasattr(obj.user, 'user') and obj.user.user:
                 return obj.user.user.username or "Usuario"
         except AttributeError:
             pass
         return "Usuario"
+    
+    def get_user_full_name(self, obj):
+        """Get full name from Profile."""
+        try:
+            if obj.user and hasattr(obj.user, 'full_name'):
+                return obj.user.full_name or "Usuario"
+        except AttributeError:
+            pass
+        return "Usuario"
+    
+    def get_user_email(self, obj):
+        """Get email from the related User model."""
+        try:
+            if obj.user and hasattr(obj.user, 'user') and obj.user.user:
+                return obj.user.user.email or ""
+        except AttributeError:
+            pass
+        return ""
    
     class Meta:
         model = EventRegistration
-        fields = ["id", "event", "rating", "comment", "status", "user_username"]
+        fields = [
+            "id", "event", "user", "rating", "comment", "status", 
+            "user_username", "user_full_name", "user_email",
+            "created_at", "updated_at"
+        ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']

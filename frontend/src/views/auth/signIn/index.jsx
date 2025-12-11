@@ -118,7 +118,11 @@ function SignIn() {
         duration: 2000,
         isClosable: true,
       });
-      useAuthStore.getState().setUser(username);
+      useAuthStore.getState().setUser({
+        username: username,
+        role: response.data.role || 'student', // Asegúrate que el backend devuelva 'role'
+        email: response.data.email || ''
+      });
 
       // 6. Redirigir al dashboard (Ruta por defecto del dashboard de Horizon UI)
       navigate('/user');

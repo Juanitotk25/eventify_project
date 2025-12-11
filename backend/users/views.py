@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404
 from event_management.models import EventRegistration, Event
 from event_management.serializers import EventSerializer
 from .serializers import UserSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -112,3 +114,40 @@ class CancelRegistrationView(APIView):
                 'success': False,
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Agrega custom claims
+        token['username'] = user.username
+        token['email'] = user.email
+        
+        # Obtener el rol del perfil si existe
+        try:
+            role = user.profile.role if hasattr(user, 'profile') else 'student'
+        except:
+            role = 'student'
+        
+        token['role'] = role
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Obtener el rol del perfil
+        try:
+            role = self.user.profile.role if hasattr(self.user, 'profile') else 'student'
+        except:
+            role = 'student'
+        
+        # Agrega datos adicionales a la respuesta
+        data.update({
+            'username': self.user.username,
+            'email': self.user.email,
+            'role': role,
+        })
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
