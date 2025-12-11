@@ -1,88 +1,102 @@
+# backend/event_management/reports.py
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.models import User
 from django.db.models import Count, Q
+from datetime import datetime, timedelta
+from .models import Event, EventRegistration  # Ajusta según tus modelos
 from django.utils import timezone
-from datetime import timedelta
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAdminUser])
 def admin_reports(request):
-    """
-    Reportes globales para administradores
-    """
-    # Verificar si el usuario es admin
-    if not request.user.is_staff:
-        return Response(
-            {"detail": "Solo administradores pueden acceder a estos reportes."},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    # Parámetros de filtro
+    period = request.GET.get('period', 'all')
     
-    # Parámetros de fecha
-    start_date = request.query_params.get('start_date')
-    end_date = request.query_params.get('end_date')
+    # Base queryset
+    events = Event.objects.all()
     
-    # Filtrar eventos por fecha si se proporciona
-    events_qs = Event.objects.all()
-    
-    if start_date:
-        events_qs = events_qs.filter(created_at__gte=start_date)
-    if end_date:
-        events_qs = events_qs.filter(created_at__lte=end_date)
+    # Filtrar por período (basado en fecha de creación)
+    now = timezone.now()
+    if period == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        events = events.filter(created_at__gte=start_date)
+    elif period == 'week':
+        start_date = now - timedelta(days=7)
+        events = events.filter(created_at__gte=start_date)
+    elif period == 'month':
+        start_date = now - timedelta(days=30)
+        events = events.filter(created_at__gte=start_date)
     
     # Estadísticas generales
-    total_events = events_qs.count()
-    total_registrations = EventRegistration.objects.filter(event__in=events_qs).count()
+    total_events = events.count()
+    
+    # Total de inscripciones
+    total_registrations = EventRegistration.objects.filter(
+        event__in=events
+    ).count()
+    
+    # Total de confirmaciones (ajusta según tu lógica de confirmación)
+    total_confirmed = EventRegistration.objects.filter(
+        event__in=events,
+        attendance_status='attended'  # Ajusta este campo según tu modelo
+    ).count()
+    
+    # Calcular tasa de confirmación
+    confirmation_rate = 0
+    if total_registrations > 0:
+        confirmation_rate = round((total_confirmed / total_registrations) * 100, 2)
+    
+    # Distribución por categoría
+    events_by_category = events.values('category__name').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Convertir a diccionario
+    category_dict = {}
+    for item in events_by_category:
+        category_name = item['category__name'] or 'Sin categoría'
+        category_dict[category_name] = item['count']
     
     # Eventos más populares (por número de inscritos)
-    popular_events = events_qs.annotate(
+    popular_events = events.annotate(
         registration_count=Count('registrations')
     ).order_by('-registration_count')[:10]
     
-    # Distribución por categoría
-    category_distribution = Category.objects.annotate(
-        event_count=Count('events', filter=Q(events__in=events_qs)),
-        total_registrations=Count('events__registrations', filter=Q(events__in=events_qs))
-    ).values('name', 'event_count', 'total_registrations').order_by('-event_count')
-    
-    # Eventos recientes
-    recent_events = events_qs.order_by('-created_at')[:5]
-    
-    # Asistencia general
-    total_attended = EventRegistration.objects.filter(
-        status=RegistrationStatus.ATTENDED,
-        event__in=events_qs
-    ).count()
+    # Preparar datos de eventos para la respuesta
+    events_data = []
+    for event in popular_events:
+        # Contar confirmaciones para este evento
+        confirmed_count = event.registrations.filter(
+            attendance_status='attended'
+        ).count()
+        
+        # Determinar estado
+        if event.end_time and event.end_time < now:
+            status = 'finished'
+        elif event.start_time and event.start_time > now:
+            status = 'upcoming'
+        else:
+            status = 'active'
+        
+        events_data.append({
+            'id': event.id,
+            'name': event.title,
+            'date': event.start_time.strftime('%Y-%m-%d') if event.start_time else None,
+            'category': event.category.name if event.category else 'Sin categoría',
+            'attendees': event.registration_count,
+            'confirmed': confirmed_count,
+            'status': status
+        })
     
     return Response({
-        "period": {
-            "start_date": start_date,
-            "end_date": end_date
-        },
-        "statistics": {
-            "total_events": total_events,
-            "total_registrations": total_registrations,
-            "total_attended": total_attended,
-            "global_attendance_rate": round((total_attended / total_registrations * 100) if total_registrations > 0 else 0, 2)
-        },
-        "popular_events": [
-            {
-                "id": str(event.id),
-                "title": event.title,
-                "registrations": event.registration_count,
-                "organizer": event.organizer.full_name if event.organizer else "N/A"
-            }
-            for event in popular_events
-        ],
-        "category_distribution": list(category_distribution),
-        "recent_events": [
-            {
-                "id": str(event.id),
-                "title": event.title,
-                "created_at": event.created_at,
-                "category": event.category.name if event.category else "Sin categoría"
-            }
-            for event in recent_events
-        ]
+        'events': events_data,
+        'stats': {
+            'totalEvents': total_events,
+            'totalAttendees': total_registrations,  # O usa total_confirmed según lo que quieras mostrar
+            'totalRegistrations': total_registrations,
+            'totalConfirmed': total_confirmed,
+            'confirmationRate': confirmation_rate,
+            'eventsByCategory': category_dict
+        }
     })

@@ -1,5 +1,5 @@
+// src/routes.js
 import React from 'react';
-
 import { Icon } from '@chakra-ui/react';
 import {
   MdBarChart,
@@ -21,13 +21,18 @@ import EventList from "views/admin/eventList";
 import CreateEvent from "views/admin/createEvent";
 import JoinedEvents from "views/admin/joinedEvents";
 import MyEventsReports from "views/admin/reports/MyEventsReports";
-import EventReport from "views/admin/reports/EventReport";
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import SignUpCentered from 'views/auth/signUp';
 import LandingPage from 'views/auth/landingPage';
 import NotFound from 'views/auth/notFound';
+
+// CORRECCIÓN: Importa desde la ubicación correcta
+import AdminReports from "views/admin/reports/AdminReports";
+
+// Importa AdminRoute (necesitas crear este archivo primero)
+import AdminRoute from 'components/AdminRoute';
 
 const routes = [
   {
@@ -58,13 +63,25 @@ const routes = [
     icon: <Icon as={MdGroups} width="20px" height="20px" color="inherit" />,
     component: <JoinedEvents />,
   },
-   // NUEVA RUTA PARA REPORTES
   {
-    name: 'Reportes',
+    name: 'Mis Reportes',
     layout: '/user',
     path: '/reports',
     icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
-    component: <MyEventsReports />,  // ← Debe coincidir con el nombre de importación
+    component: <MyEventsReports />,
+  },
+  // NUEVA RUTA SOLO PARA ADMINISTRADORES
+  {
+    name: 'Reportes Admin',
+    layout: '/user',
+    path: '/admin-reports',
+    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
+    component: (
+      <AdminRoute>
+        <AdminReports />
+      </AdminRoute>
+    ),
+    showForAdmin: true,
   },
   {
     name: "Landing Page",
@@ -129,16 +146,6 @@ const routes = [
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <NotFound />,
   },
-  
-  /*// Ruta para reporte detallado de un evento
-  {
-    name: 'Reporte de Evento',
-    layout: '/user',
-    path: '/reports/event/:id',
-    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
-    component: <EventReport />,  // ← Debe coincidir con el nombre de importación
-    
-  },*/
 ];
 
 export default routes;
