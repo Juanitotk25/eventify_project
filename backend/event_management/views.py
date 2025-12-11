@@ -127,7 +127,7 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def attendance_report(self, request, pk=None):
         """
-        Reporte de asistencia para el organizador del evento
+        Reporte MÍNIMO - Solo números
         """
         event = self.get_object()
         
@@ -138,33 +138,21 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Obtener estadísticas
+        # Solo estadísticas básicas - sin listas de usuarios
         total_registered = event.registrations.count()
         total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
-        
-        # Lista de asistentes
-        attendees = event.registrations.filter(status=RegistrationStatus.ATTENDED) \
-            .select_related('user') \
-            .values('user__user__username', 'user__user__email', 'user__full_name', 'created_at')
-        
-        # Lista de inscritos no asistentes
-        non_attendees = event.registrations.exclude(status=RegistrationStatus.ATTENDED) \
-            .select_related('user') \
-            .values('user__user__username', 'user__user__email', 'user__full_name', 'status', 'created_at')
         
         return Response({
             "event": {
                 "id": str(event.id),
                 "title": event.title,
-                "start_time": event.start_time,
             },
             "statistics": {
                 "total_registered": total_registered,
                 "total_attended": total_attended,
                 "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2)
             },
-            "attendees": list(attendees),
-            "non_attendees": list(non_attendees)
+            "message": "Reporte básico - Listas de usuarios deshabilitadas temporalmente"
         })   
 
 

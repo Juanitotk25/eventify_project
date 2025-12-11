@@ -1,3 +1,4 @@
+// views/admin/reports/MyEventsReports.jsx - VERSIÓN CON MÁS DEBUG
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -5,12 +6,6 @@ import {
   Heading,
   Text,
   SimpleGrid,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Badge,
   Button,
   useToast,
@@ -18,130 +13,196 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Select,
   Skeleton,
+  Card,
+  CardBody,
+  Progress,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
-import { SearchIcon, CalendarIcon, DownloadIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { SearchIcon } from '@chakra-ui/icons';
+import { MdPeople, MdEvent, MdCheckCircle, MdError } from 'react-icons/md';
 import { eventService } from '../../../services/eventService';
 import { attendanceService } from '../../../services/attendanceService';
-// Importar desde la ubicación correcta
-import ReportCard from './components/ReportCard';
-import AttendanceChart from './components/AttendanceChart';
 
 const MyEventsReports = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalEvents: 0,
-    totalRegistrations: 0,
-    totalAttended: 0,
-    averageAttendance: 0,
-  });
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [debugInfo, setDebugInfo] = useState([]);
   const toast = useToast();
-  const navigate = useNavigate();
+
+  const addDebugLog = (message, type = 'info') => {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    setDebugInfo(prev => [
+      { message, type, timestamp: new Date().toLocaleTimeString() },
+      ...prev.slice(0, 10) // Mantener solo los últimos 10 logs
+    ]);
+  };
 
   useEffect(() => {
-    fetchMyEventsReports();
+    fetchMyEventsWithReports();
   }, []);
 
-  const fetchMyEventsReports = async () => {
+  const fetchMyEventsWithReports = async () => {
     setLoading(true);
+    setDebugInfo([]);
+    addDebugLog('Iniciando carga de reportes...', 'info');
+    
     try {
-      // Primero, obtener mis eventos organizados
+      // 1. Obtener eventos que el usuario organiza
+      addDebugLog('Obteniendo eventos que organizo...', 'info');
       const myEvents = await eventService.getEvents({ mine: 'true' });
+      addDebugLog(`Encontrados ${myEvents.length} eventos que organizo`, 'success');
       
-      // Para cada evento, obtener el reporte de asistencia
+      if (myEvents.length === 0) {
+        addDebugLog('No eres organizador de ningún evento. Crea uno primero.', 'warning');
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Para cada evento, obtener el reporte
+      addDebugLog('Obteniendo reportes de asistencia para cada evento...', 'info');
       const eventsWithReports = await Promise.all(
         myEvents.map(async (event) => {
           try {
-            const report = await attendanceService.getEventAttendanceReport(event.id);
+            addDebugLog(`Solicitando reporte para: "${event.title}"`, 'info');
+            const response = await attendanceService.getEventAttendanceReport(event.id);
+            
+            const reportData = response.data;
+            addDebugLog(`✅ Reporte recibido para "${event.title}": ${reportData.statistics?.total_registered || 0} inscritos, ${reportData.statistics?.total_attended || 0} asistentes`, 'success');
+            
             return {
               ...event,
-              report: report.data,
+              report: reportData,
+              hasReport: true,
+              error: null,
             };
           } catch (error) {
-            // Si no tiene permiso o no hay reporte, retornar sin reporte
+            const errorMsg = error.response?.data?.detail || error.message;
+            addDebugLog(`❌ Error para "${event.title}": ${errorMsg}`, 'error');
+            
             return {
               ...event,
               report: null,
+              hasReport: false,
+              error: errorMsg,
+              statusCode: error.response?.status,
             };
           }
         })
       );
       
+      addDebugLog(`Procesados ${eventsWithReports.length} eventos`, 'info');
       setEvents(eventsWithReports);
-      calculateStats(eventsWithReports);
+      
+      // Mostrar resumen
+      const withReport = eventsWithReports.filter(e => e.hasReport).length;
+      const withoutReport = eventsWithReports.filter(e => !e.hasReport).length;
+      addDebugLog(`Resumen: ${withReport} con reporte, ${withoutReport} sin reporte`, 'info');
+      
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      addDebugLog(`💥 Error general: ${error.message}`, 'error');
       toast({
         title: 'Error',
-        description: 'No se pudieron cargar los reportes',
+        description: 'No se pudieron cargar los eventos',
         status: 'error',
         duration: 3000,
-        isClosable: true,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateStats = (eventsList) => {
-    let totalEvents = eventsList.length;
-    let totalRegistrations = 0;
-    let totalAttended = 0;
-    
-    eventsList.forEach(event => {
-      if (event.report) {
-        totalRegistrations += event.report.statistics?.total_registered || 0;
-        totalAttended += event.report.statistics?.total_attended || 0;
-      }
-    });
-    
-    const averageAttendance = totalEvents > 0 ? (totalAttended / totalRegistrations) * 100 : 0;
-    
-    setStats({
-      totalEvents,
-      totalRegistrations,
-      totalAttended,
-      averageAttendance: averageAttendance.toFixed(1),
-    });
-  };
-
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(search.toLowerCase()) ||
-                         event.location?.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesFilter = filter === 'all' || 
-                         (filter === 'with_attendance' && event.report) ||
-                         (filter === 'without_attendance' && !event.report);
-    
-    return matchesSearch && matchesFilter;
+    return event.title.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handleViewReport = (eventId) => {
-    navigate(`/reports/event/${eventId}`);
+  // Calcular estadísticas
+  const calculateStats = () => {
+    let stats = {
+      totalEvents: events.length,
+      withReport: 0,
+      withoutReport: 0,
+      totalRegistrations: 0,
+      totalAttended: 0,
+      attendanceRate: 0,
+    };
+
+    events.forEach(event => {
+      if (event.hasReport && event.report?.statistics) {
+        stats.withReport++;
+        stats.totalRegistrations += event.report.statistics.total_registered || 0;
+        stats.totalAttended += event.report.statistics.total_attended || 0;
+      } else {
+        stats.withoutReport++;
+      }
+    });
+
+    stats.attendanceRate = stats.totalRegistrations > 0 
+      ? ((stats.totalAttended / stats.totalRegistrations) * 100).toFixed(1)
+      : '0.0';
+
+    return stats;
   };
 
-  const handleExportReport = async (eventId, eventTitle) => {
+  const stats = calculateStats();
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Sin fecha';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  // Función para probar endpoint manualmente
+  const testEndpointManually = async (eventId, eventTitle) => {
     try {
-      // Aquí implementarías la exportación a PDF/Excel
+      addDebugLog(`🧪 Probando endpoint para: "${eventTitle}"`, 'info');
+      const response = await attendanceService.getEventAttendanceReport(eventId);
+      console.log('📋 Respuesta completa:', response);
+      console.log('📊 Datos:', response.data);
+      
       toast({
-        title: 'Exportando...',
-        description: `Generando reporte para ${eventTitle}`,
-        status: 'info',
-        duration: 2000,
+        title: '✅ Endpoint funciona',
+        description: (
+          <Box>
+            <Text>Evento: {eventTitle}</Text>
+            <Text>Inscritos: {response.data?.statistics?.total_registered || 0}</Text>
+            <Text>Asistentes: {response.data?.statistics?.total_attended || 0}</Text>
+          </Box>
+        ),
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
       });
-      // Implementación real dependería de tu backend
+      
+      return response.data;
     } catch (error) {
+      console.error('❌ Error completo:', error);
+      console.error('❌ Response:', error.response);
+      
+      const errorDetail = error.response?.data?.detail || error.message;
+      addDebugLog(`❌ Error en endpoint: ${errorDetail}`, 'error');
+      
       toast({
-        title: 'Error',
-        description: 'No se pudo exportar el reporte',
+        title: '❌ Error en endpoint',
+        description: (
+          <Box>
+            <Text>{errorDetail}</Text>
+            <Text fontSize="sm">Status: {error.response?.status}</Text>
+          </Box>
+        ),
         status: 'error',
-        duration: 3000,
+        duration: 5000,
       });
+      
+      return null;
     }
   };
 
@@ -161,153 +222,239 @@ const MyEventsReports = () => {
 
   return (
     <Container maxW="container.xl" py={8}>
-      <Heading mb={2}>Reportes de Mis Eventos</Heading>
+      <Heading mb={2}>📊 Reportes de Mis Eventos</Heading>
       <Text color="gray.600" mb={8}>
         Estadísticas de asistencia de los eventos que organizas
       </Text>
 
+      {/* Alertas importantes */}
+      {events.length === 0 && (
+        <Alert status="warning" mb={6} borderRadius="lg">
+          <AlertIcon />
+          <Box>
+            <Text fontWeight="bold">No organizas ningún evento</Text>
+            <Text fontSize="sm">Crea un evento primero para ver reportes de asistencia.</Text>
+          </Box>
+        </Alert>
+      )}
+
       {/* Estadísticas generales */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6} mb={8}>
-        <ReportCard
-          title="Total Eventos"
-          value={stats.totalEvents}
-          subtitle="Eventos organizados"
-          colorScheme="blue"
-        />
-        <ReportCard
-          title="Total Inscritos"
-          value={stats.totalRegistrations}
-          subtitle="Personas registradas"
-          colorScheme="purple"
-        />
-        <ReportCard
-          title="Asistentes"
-          value={stats.totalAttended}
-          subtitle="Confirmaciones de asistencia"
-          colorScheme="green"
-        />
-        <ReportCard
-          title="Tasa de Asistencia"
-          value={`${stats.averageAttendance}%`}
-          subtitle="Promedio general"
-          colorScheme="orange"
-        />
+        <Card bg="blue.50" border="1px solid" borderColor="blue.200">
+          <CardBody>
+            <Flex align="center" mb={2}>
+              <Box as={MdEvent} color="blue.500" mr={2} />
+              <Text fontSize="sm" color="gray.600">Total Eventos</Text>
+            </Flex>
+            <Text fontSize="3xl" fontWeight="bold" color="blue.700">{stats.totalEvents}</Text>
+            <Text fontSize="xs" color="gray.500">Eventos que organizas</Text>
+          </CardBody>
+        </Card>
+
+        <Card bg={stats.withReport > 0 ? "green.50" : "yellow.50"} 
+              border="1px solid" 
+              borderColor={stats.withReport > 0 ? "green.200" : "yellow.200"}>
+          <CardBody>
+            <Flex align="center" mb={2}>
+              <Box as={MdCheckCircle} color={stats.withReport > 0 ? "green.500" : "yellow.500"} mr={2} />
+              <Text fontSize="sm" color="gray.600">Con Reporte</Text>
+            </Flex>
+            <Text fontSize="3xl" fontWeight="bold" color={stats.withReport > 0 ? "green.700" : "yellow.700"}>{stats.withReport}</Text>
+            <Text fontSize="xs" color="gray.500">Reportes disponibles</Text>
+          </CardBody>
+        </Card>
+
+        <Card bg="purple.50" border="1px solid" borderColor="purple.200">
+          <CardBody>
+            <Flex align="center" mb={2}>
+              <Box as={MdPeople} color="purple.500" mr={2} />
+              <Text fontSize="sm" color="gray.600">Total Inscritos</Text>
+            </Flex>
+            <Text fontSize="3xl" fontWeight="bold" color="purple.700">{stats.totalRegistrations}</Text>
+            <Text fontSize="xs" color="gray.500">Personas registradas</Text>
+          </CardBody>
+        </Card>
+
+        <Card bg="orange.50" border="1px solid" borderColor="orange.200">
+          <CardBody>
+            <Flex align="center" mb={2}>
+              <Box as={MdPeople} color="orange.500" mr={2} />
+              <Text fontSize="sm" color="gray.600">Asistentes</Text>
+            </Flex>
+            <Text fontSize="3xl" fontWeight="bold" color="orange.700">{stats.totalAttended}</Text>
+            <Progress 
+              value={stats.attendanceRate} 
+              size="sm" 
+              colorScheme={stats.attendanceRate >= 70 ? 'green' : stats.attendanceRate >= 40 ? 'yellow' : 'red'}
+              mt={2}
+            />
+            <Text fontSize="xs" color="gray.500" mt={1}>{stats.attendanceRate}% de asistencia</Text>
+          </CardBody>
+        </Card>
       </SimpleGrid>
 
-      {/* Filtros y búsqueda */}
-      <Flex gap={4} mb={6} flexWrap="wrap">
-        <InputGroup maxW="300px">
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.400" />
-          </InputLeftElement>
-          <Input
-            placeholder="Buscar evento..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </InputGroup>
-        
-        <Select maxW="200px" value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="all">Todos los eventos</option>
-          <option value="with_attendance">Con reporte</option>
-          <option value="without_attendance">Sin reporte</option>
-        </Select>
-      </Flex>
+      {/* Búsqueda */}
+      <InputGroup mb={6} maxW="400px">
+        <InputLeftElement pointerEvents="none">
+          <SearchIcon color="gray.400" />
+        </InputLeftElement>
+        <Input
+          placeholder="Buscar eventos..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          bg="white"
+        />
+      </InputGroup>
 
-      {/* Tabla de eventos */}
-      <Box bg="white" borderRadius="xl" boxShadow="sm" overflow="hidden">
-        <Table variant="simple">
-          <Thead bg="gray.50">
-            <Tr>
-              <Th>Evento</Th>
-              <Th>Fecha</Th>
-              <Th>Inscritos</Th>
-              <Th>Asistentes</Th>
-              <Th>Tasa</Th>
-              <Th>Acciones</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredEvents.length === 0 ? (
+      {/* Lista de eventos */}
+      {filteredEvents.length === 0 ? (
+        <Box textAlign="center" py={10}>
+          <Text fontSize="lg" color="gray.500" mb={4}>
+            {search ? 'No se encontraron eventos que coincidan' : 'No organizas ningún evento'}
+          </Text>
+          <Button colorScheme="blue" onClick={() => window.location.href = '/user/create-event'}>
+            Crear Mi Primer Evento
+          </Button>
+        </Box>
+      ) : (
+        <Box>
+          {/* Tabla de eventos */}
+          <Table variant="simple" mb={8}>
+            <Thead bg="gray.50">
               <Tr>
-                <Td colSpan={6} textAlign="center" py={8}>
-                  <Text color="gray.500">No se encontraron eventos</Text>
-                </Td>
+                <Th>Evento</Th>
+                <Th>Fecha</Th>
+                <Th>Estado</Th>
+                <Th>Inscritos</Th>
+                <Th>Asistentes</Th>
+                <Th>Tasa</Th>
+                <Th>Acciones</Th>
               </Tr>
-            ) : (
-              filteredEvents.map((event) => (
+            </Thead>
+            <Tbody>
+              {filteredEvents.map((event) => (
                 <Tr key={event.id} _hover={{ bg: 'gray.50' }}>
                   <Td>
                     <Box>
                       <Text fontWeight="medium">{event.title}</Text>
-                      <Text fontSize="sm" color="gray.600">{event.location}</Text>
+                      <Text fontSize="sm" color="gray.600">{event.location || 'Sin ubicación'}</Text>
                     </Box>
                   </Td>
+                  <Td>{formatDate(event.start_time)}</Td>
                   <Td>
-                    {new Date(event.start_time).toLocaleDateString('es-ES', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </Td>
-                  <Td>
-                    {event.report ? (
-                      <Text fontWeight="bold">{event.report.statistics?.total_registered || 0}</Text>
-                    ) : (
-                      <Badge colorScheme="yellow">Sin datos</Badge>
+                    <Badge colorScheme={event.hasReport ? 'green' : 'yellow'}>
+                      {event.hasReport ? 'Con reporte' : 'Sin reporte'}
+                    </Badge>
+                    {event.error && (
+                      <Text fontSize="xs" color="red.500" mt={1}>
+                        {event.error}
+                      </Text>
                     )}
                   </Td>
                   <Td>
-                    {event.report ? (
-                      <Text fontWeight="bold" color="green.600">
-                        {event.report.statistics?.total_attended || 0}
+                    {event.hasReport ? (
+                      <Text fontWeight="bold" fontSize="lg">
+                        {event.report?.statistics?.total_registered || 0}
                       </Text>
                     ) : (
-                      <Badge colorScheme="gray">-</Badge>
-                    )}
-                  </Td>
-                  <Td width="200px">
-                    {event.report ? (
-                      <AttendanceChart
-                        total={event.report.statistics?.total_registered || 0}
-                        attended={event.report.statistics?.total_attended || 0}
-                        height="30px"
-                      />
-                    ) : (
-                      <Text color="gray.500">-</Text>
+                      <Text color="gray.400">-</Text>
                     )}
                   </Td>
                   <Td>
-                    <Flex gap={2}>
-                      {event.report ? (
-                        <>
-                          <Button
-                            size="sm"
-                            colorScheme="blue"
-                            onClick={() => handleViewReport(event.id)}
-                          >
-                            Ver Detalles
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            leftIcon={<DownloadIcon />}
-                            onClick={() => handleExportReport(event.id, event.title)}
-                          >
-                            Exportar
-                          </Button>
-                        </>
-                      ) : (
-                        <Text fontSize="sm" color="gray.500">
-                          No disponible
+                    {event.hasReport ? (
+                      <Text fontWeight="bold" fontSize="lg" color="green.600">
+                        {event.report?.statistics?.total_attended || 0}
+                      </Text>
+                    ) : (
+                      <Text color="gray.400">-</Text>
+                    )}
+                  </Td>
+                  <Td width="150px">
+                    {event.hasReport ? (
+                      <Box>
+                        <Progress 
+                          value={event.report?.statistics?.attendance_rate || 0}
+                          size="sm"
+                          colorScheme={
+                            (event.report?.statistics?.attendance_rate || 0) >= 70 ? 'green' :
+                            (event.report?.statistics?.attendance_rate || 0) >= 40 ? 'yellow' : 'red'
+                          }
+                          mb={1}
+                        />
+                        <Text fontSize="xs" color="gray.600" textAlign="center">
+                          {event.report?.statistics?.attendance_rate || 0}%
                         </Text>
-                      )}
-                    </Flex>
+                      </Box>
+                    ) : (
+                      <Text color="gray.400">-</Text>
+                    )}
+                  </Td>
+                  <Td>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={() => testEndpointManually(event.id, event.title)}
+                      isDisabled={loading}
+                    >
+                      Probar Endpoint
+                    </Button>
                   </Td>
                 </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
+              ))}
+            </Tbody>
+          </Table>
+
+          {/* Explicación */}
+          <Alert status="info" borderRadius="lg" mb={6}>
+            <AlertIcon />
+            <Box>
+              <Text fontWeight="bold">¿Por qué no veo estadísticas?</Text>
+              <Text fontSize="sm">
+                1. Las personas deben <strong>confirmar asistencia</strong> (botón "Confirmar Asistencia")<br />
+                2. Solo aparecen en "Asistentes" después de confirmar<br />
+                3. "Inscritos" cuenta a todos los que se han unido al evento
+              </Text>
+            </Box>
+          </Alert>
+        </Box>
+      )}
+
+      {/* Panel de Debug */}
+      {debugInfo.length > 0 && (
+        <Box mt={10} p={4} bg="gray.900" color="white" borderRadius="lg">
+          <Heading size="sm" mb={3} color="gray.300">🛠️ Panel de Debug</Heading>
+          <Flex justify="space-between" mb={3}>
+            <Text fontSize="sm">Últimos logs ({debugInfo.length})</Text>
+            <Button size="xs" onClick={() => setDebugInfo([])}>Limpiar</Button>
+          </Flex>
+          <Box maxH="200px" overflowY="auto" fontSize="xs" fontFamily="monospace">
+            {debugInfo.map((log, index) => (
+              <Flex key={index} mb={1} color={log.type === 'error' ? 'red.300' : log.type === 'success' ? 'green.300' : 'gray.300'}>
+                <Text color="gray.500" mr={2}>[{log.timestamp}]</Text>
+                <Text>{log.message}</Text>
+              </Flex>
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* Instrucciones */}
+      <Box mt={8} p={4} bg="blue.50" borderRadius="lg">
+        <Heading size="sm" mb={2} color="blue.700">📝 ¿Cómo funciona?</Heading>
+        <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
+          <Box>
+            <Text fontWeight="bold" mb={1}>1. Crear Evento</Text>
+            <Text fontSize="sm">Crea un evento en la sección "Crear Evento"</Text>
+          </Box>
+          <Box>
+            <Text fontWeight="bold" mb={1}>2. Personas se inscriben</Text>
+            <Text fontSize="sm">Los usuarios se unen a tu evento desde "Lista de eventos"</Text>
+          </Box>
+          <Box>
+            <Text fontWeight="bold" mb={1}>3. Confirmar Asistencia</Text>
+            <Text fontSize="sm">Cada usuario debe hacer clic en "Confirmar Asistencia" en sus eventos</Text>
+          </Box>
+        </SimpleGrid>
       </Box>
     </Container>
   );
