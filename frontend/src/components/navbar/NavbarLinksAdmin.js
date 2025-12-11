@@ -547,24 +547,19 @@ export default function HeaderLinks(props) {
           </Flex>
           <Flex flexDirection="column" p="10px">
             <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
+              _hover={{ textColor: 'purple.200' }}
               borderRadius="8px"
+              color="black"
               px="14px"
+              onClick={()=> {
+                navigate("/user/profile");
+              }}
             >
               <Text fontSize="sm">Profile Settings</Text>
             </MenuItem>
             <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Text fontSize="sm">Newsletter Settings</Text>
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
+                _hover={{ textColor: 'red.700' }}
+                _focus={{ textColor: 'red.700' }}
               color="red.400"
               borderRadius="8px"
               px="14px"
