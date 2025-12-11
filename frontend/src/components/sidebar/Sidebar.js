@@ -11,7 +11,7 @@ import {
   DrawerOverlay,
   useDisclosure,
   DrawerContent,
-  DrawerCloseButton,
+  DrawerCloseButton, Image,
 } from "@chakra-ui/react";
 import Content from "components/sidebar/components/Content";
 import {
@@ -24,6 +24,7 @@ import PropTypes from "prop-types";
 
 // Assets
 import { IoMenuOutline } from "react-icons/io5";
+import sideBarIllustration from "assets/img/elephant.png";
 
 function Sidebar(props) {
   const { routes } = props;
