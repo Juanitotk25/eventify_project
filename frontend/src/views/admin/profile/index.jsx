@@ -21,22 +21,136 @@
 */
 
 // Chakra imports
-import { Box, Grid } from "@chakra-ui/react";
+import {Avatar, Box, Grid, useToast} from "@chakra-ui/react";
 
 // Custom components
 import Banner from "views/admin/profile/components/Banner";
 import General from "views/admin/profile/components/General";
-import Notifications from "views/admin/profile/components/Notifications";
-import Projects from "views/admin/profile/components/Projects";
-import Storage from "views/admin/profile/components/Storage";
-import Upload from "views/admin/profile/components/Upload";
 
 // Assets
 import banner from "assets/img/auth/banner.png";
 import avatar from "assets/img/avatars/avatar4.png";
-import React from "react";
+import React, {useRef, useState, useEffect} from "react";
+import axios from "axios";
+import {useAuthStore} from "stores/useAuthStore";
+
 
 export default function Overview() {
+
+
+    const abortRef = useRef(null);
+    const [profile, setProfile] = useState(null);
+    const [error, setError] = useState("");
+    const toast = useToast();
+    const [loading, setLoading] = useState(false);
+    const { setUser } = useAuthStore();
+
+    const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
+
+
+    const fetchProfile = async () => {
+        if (abortRef.current) abortRef.current.abort();
+        abortRef.current = new AbortController();
+
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setProfile(null);
+            setError("No estás autenticado. Inicia sesión.");
+            return;
+        }
+
+        try {
+
+            const res = await axios.get(`${API_BASE}/api/users/profile/`, {
+                headers: { Authorization: `Bearer ${token}` },
+                signal: abortRef.current.signal,
+            });
+
+            setProfile(res.data); // res.data = { user: {...}, profile: {...} }
+            setError("");
+        } catch (err) {
+            if (!axios.isCancel(err)) {
+                const msg = err.response?.data?.detail || "Error cargando perfil";
+                setError(msg);
+                setProfile(null);
+                toast({
+                    title: "Error de Carga",
+                    description: msg,
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    // ==== UPDATE PROFILE ====
+    const updateProfile = async (newUsername) => {
+        const token = localStorage.getItem("access_token");
+        try {
+            const res = await axios.patch(
+                `${API_BASE}/api/users/profile/`,
+                {
+                        username: newUsername,
+                    },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setProfile(res.data);
+            setUser(res.data);
+
+            toast({
+                title: "Perfil actualizado",
+                status: "success",
+            });
+
+        } catch (err) {
+            const msg = err.response?.data?.detail || "No se pudo actualizar el perfil";
+            toast({
+                title: "Error",
+                description: msg,
+                status: "error",
+            });
+        }
+    };
+
+    // ==== CHANGE PASSWORD ====
+    const changePassword = async (oldPassword, newPassword) => {
+        const token = localStorage.getItem("access_token");
+
+        try {
+            await axios.post(
+                `${API_BASE}/api/users/profile/change-password/`,
+                { old_password: oldPassword, new_password: newPassword },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            toast({
+                title: "Contraseña cambiada",
+                status: "success",
+            });
+
+        } catch (err) {
+            const msg =
+                err.response?.data?.detail ||
+                err.response?.data?.old_password ||
+                "No se pudo cambiar la contraseña";
+
+            toast({
+                title: "Error",
+                description: Array.isArray(msg) ? msg[0] : msg,
+                status: "error",
+            });
+        }
+    };
+
+
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
       {/* Main Fields */}
@@ -53,65 +167,16 @@ export default function Overview() {
         <Banner
           gridArea='1 / 1 / 2 / 2'
           banner={banner}
-          avatar={avatar}
-          name='Adela Parkson'
-          job='Product Designer'
-          posts='17'
-          followers='9.7k'
-          following='274'
+          name={profile?.username || "Invitado"}
+          role={profile?.profile?.role || ""}
+          dob={new Date(profile?.profile?.created_at).toLocaleDateString() || ""}
         />
-        <Storage
-          gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 2 / 2 / 3" }}
-          used={25.6}
-          total={50}
-        />
-        <Upload
-          gridArea={{
-            base: "3 / 1 / 4 / 2",
-            lg: "1 / 3 / 2 / 4",
-          }}
-          minH={{ base: "auto", lg: "420px", "2xl": "365px" }}
-          pe='20px'
-          pb={{ base: "100px", lg: "20px" }}
-        />
-      </Grid>
-      <Grid
-        mb='20px'
-        templateColumns={{
-          base: "1fr",
-          lg: "repeat(2, 1fr)",
-          "2xl": "1.34fr 1.62fr 1fr",
-        }}
-        templateRows={{
-          base: "1fr",
-          lg: "repeat(2, 1fr)",
-          "2xl": "1fr",
-        }}
-        gap={{ base: "20px", xl: "20px" }}>
-        <Projects
-          gridArea='1 / 2 / 2 / 2'
-          banner={banner}
-          avatar={avatar}
-          name='Adela Parkson'
-          job='Product Designer'
-          posts='17'
-          followers='9.7k'
-          following='274'
-        />
-        <General
-          gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 2 / 2 / 3" }}
-          minH='365px'
-          pe='20px'
-        />
-        <Notifications
-          used={25.6}
-          total={50}
-          gridArea={{
-            base: "3 / 1 / 4 / 2",
-            lg: "2 / 1 / 3 / 3",
-            "2xl": "1 / 3 / 2 / 4",
-          }}
-        />
+      <General
+          gridArea='1 / 2 / 1 / 4'
+          profile={profile}
+          onUpdate={updateProfile}
+          onChangePassword={changePassword}
+      />
       </Grid>
     </Box>
   );
