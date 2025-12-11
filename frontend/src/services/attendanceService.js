@@ -16,3 +16,5 @@ export const attendanceService = {
     return api.get('/api/admin-reports/', { params });
   }
 };
+
+export default attendanceService;

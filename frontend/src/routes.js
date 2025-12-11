@@ -8,7 +8,8 @@ import {
   MdLock,
   MdEvent,
   MdGroups,
-  MdAddCircle
+  MdAddCircle,
+  MdAssessment
 } from 'react-icons/md';
 
 // Admin Imports
@@ -19,6 +20,8 @@ import RTL from 'views/admin/rtl';
 import EventList from "views/admin/eventList";
 import CreateEvent from "views/admin/createEvent";
 import JoinedEvents from "views/admin/joinedEvents";
+import MyEventsReports from "views/admin/reports/MyEventsReports";
+import EventReport from "views/admin/reports/EventReport";
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
@@ -54,7 +57,15 @@ const routes = [
     path: '/registered',
     icon: <Icon as={MdGroups} width="20px" height="20px" color="inherit" />,
     component: <JoinedEvents />,
-  },/*
+  },
+   // NUEVA RUTA PARA REPORTES
+  {
+    name: 'Reportes',
+    layout: '/user',
+    path: '/reports',
+    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
+    component: <MyEventsReports />,  // ← Debe coincidir con el nombre de importación
+  },
   {
     name: "Landing Page",
     layout: "/auth",
@@ -117,6 +128,16 @@ const routes = [
     path: '*',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
     component: <NotFound />,
+  },
+  
+  /*// Ruta para reporte detallado de un evento
+  {
+    name: 'Reporte de Evento',
+    layout: '/user',
+    path: '/reports/event/:id',
+    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
+    component: <EventReport />,  // ← Debe coincidir con el nombre de importación
+    
   },*/
 ];
 
