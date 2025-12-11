@@ -1,31 +1,39 @@
-// Chakra imports
-import {Portal, Box, useDisclosure, useColorModeValue} from '@chakra-ui/react';
+// src/layouts/admin/index.jsx
+import { Portal, Box, useDisclosure, useColorModeValue } from '@chakra-ui/react';
 import Footer from '../../components/footer/FooterUser.js';
 // Layout components
 import Navbar from 'components/navbar/NavbarAdmin.js';
 import Sidebar from 'components/sidebar/Sidebar.js';
 import { SidebarContext } from 'contexts/SidebarContext';
 import React, { useState } from 'react';
-import {Navigate, Route, Routes} from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import routes from 'routes.js';
-
+import { useAuthStore } from 'stores/useAuthStore'; // Importa el store
 
 // Custom Chakra theme
 export default function Dashboard(props) {
   const { ...rest } = props;
+  
+  // Obtén el rol del usuario del store
+  const role = useAuthStore((state) => state.role);
+  const user = useAuthStore((state) => state.user);
+  
   // states and functions
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const bgGradient = useColorModeValue(
-      "linear(to-br, #e1e3f7, #e3ffff, #f6ccff)",
-      "linear(to-br, #232e82, #091d47, #7b1fff)"
+    "linear(to-br, #e1e3f7, #e3ffff, #f6ccff)",
+    "linear(to-br, #232e82, #091d47, #7b1fff)"
   );
+  
   // functions for changing the states from components
   const location = useLocation();
+  
   const getRoute = () => {
     return window.location.pathname !== '/admin/full-screen-maps';
   };
+  
   const getActiveRoute = (routes, pathname) => {
     let activeRoute = 'Página no encontrada';
     for (let i = 0; i < routes.length; i++) {
@@ -40,13 +48,14 @@ export default function Dashboard(props) {
           return categoryActiveRoute;
         }
       } else {
-        if(pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
+        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1) {
           return routes[i].name;
         }
       }
     }
     return activeRoute;
   };
+  
   const getActiveNavbar = (routes, pathname) => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
@@ -61,13 +70,14 @@ export default function Dashboard(props) {
           return categoryActiveNavbar;
         }
       } else {
-        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
+        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1) {
           return routes[i].secondary;
         }
       }
     }
     return activeNavbar;
   };
+  
   const getActiveNavbarText = (routes, pathname) => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
@@ -82,13 +92,45 @@ export default function Dashboard(props) {
           return categoryActiveNavbar;
         }
       } else {
-        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1){
+        if (pathname.indexOf(routes[i].layout + routes[i].path) !== -1) {
           return routes[i].messageNavbar;
         }
       }
     }
     return activeNavbar;
   };
+  
+  // Filtrar rutas según el rol del usuario
+  const getFilteredRoutes = (routes) => {
+    if (!user) return []; // Si no hay usuario, no mostrar rutas
+    
+    return routes.filter((route) => {
+      // Si la ruta requiere ser admin y el usuario no es admin, excluirla
+      if (route.showForAdmin && role !== 'admin') {
+        return false;
+      }
+      
+      // Si es una ruta colapsable, filtrar sus items también
+      if (route.collapse) {
+        route.items = getFilteredRoutes(route.items);
+        return route.items.length > 0; // Solo mostrar si tiene items después del filtro
+      }
+      
+      // Si es una ruta de categoría, filtrar sus items
+      if (route.category) {
+        route.items = getFilteredRoutes(route.items);
+        return route.items.length > 0;
+      }
+      
+      // Para rutas normales, verificar permisos
+      if (route.requiresAdmin && role !== 'admin') {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+  
   const getRoutes = (routes) => {
     return routes.map((route, key) => {
       if (route.layout === '/user') {
@@ -103,19 +145,24 @@ export default function Dashboard(props) {
       }
     });
   };
+  
+  // Función modificada para filtrar rutas en el sidebar
   const getSidebarRoutes = (routes) => {
-    return routes
-        .filter((r) =>
-            (r.layout === '/user' || r.collapse) &&
-            r.path !== '*'
-        )
-        .map((r) =>
-            r.collapse ? { ...r, items: getSidebarRoutes(r.items) } : r
-        );
+    const filteredRoutes = getFilteredRoutes(routes);
+    
+    return filteredRoutes
+      .filter((r) =>
+        (r.layout === '/user' || r.collapse) &&
+        r.path !== '*'
+      )
+      .map((r) =>
+        r.collapse ? { ...r, items: getSidebarRoutes(r.items) } : r
+      );
   };
+  
   document.documentElement.dir = 'ltr';
   const { onOpen } = useDisclosure();
-  document.documentElement.dir = 'ltr';
+  
   return (
     <Box>
       <Box>
@@ -125,7 +172,12 @@ export default function Dashboard(props) {
             setToggleSidebar,
           }}
         >
-          <Sidebar routes={getSidebarRoutes(routes)} display="none" {...rest} />
+          {/* Pasa las rutas filtradas al Sidebar */}
+          <Sidebar 
+            routes={getSidebarRoutes(routes)} 
+            display="none" 
+            {...rest} 
+          />
           <Box
             bgGradient={bgGradient}
             float="right"
@@ -161,17 +213,16 @@ export default function Dashboard(props) {
                 pe="20px"
                 minH="100vh"
                 pt="50px"
-
               >
-              <Routes>
-                {getRoutes(routes)}
-                <Route
+                <Routes>
+                  {getRoutes(routes)}
+                  <Route
                     path="/"
                     element={<Navigate to="/user/dashboard" replace />}
-                />
-              </Routes>
+                  />
+                </Routes>
               </Box>
-                 ) : null}
+            ) : null}
             <Box>
               <Footer />
             </Box>

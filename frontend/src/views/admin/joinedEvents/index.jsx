@@ -186,10 +186,49 @@ export default function JoinedEvents() {
             {/* LISTA DE EVENTOS */}
             {loading && <Text color="gray.500">Cargando eventos...</Text>}
             {error && !loading && <Text color="red.400">{error}</Text>}
-
             <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px">
                 {events.map((ev) => (
-                    <EventCardRating key={ev.id} event={ev} registrationId={ev.registration_id}/>
+                    <EventCardRating 
+                    key={ev.id} 
+                    event={ev} 
+                    registrationId={ev.registration_id}
+                    status={ev.registration_status}
+                    onAttendanceConfirmed={(eventId) => {
+                        // Actualizar estado local cuando se confirma asistencia
+                        setEvents(prevEvents => 
+                        prevEvents.map(event => 
+                            event.id === eventId 
+                            ? { 
+                                ...event, 
+                                registration_status: 'attended'
+                                }
+                            : event
+                        )
+                        );
+                        
+                        toast({
+                        title: "¡Actualizado!",
+                        description: "La asistencia ha sido actualizada en la lista",
+                        status: "info",
+                        duration: 2000,
+                        isClosable: true,
+                        });
+                    }}
+                    onCancelRegistration={(eventId) => {
+                        // Eliminar el evento de la lista cuando se cancela la inscripción
+                        setEvents(prevEvents => 
+                        prevEvents.filter(event => event.id !== eventId)
+                        );
+                        
+                        toast({
+                        title: "Evento eliminado",
+                        description: "El evento ha sido eliminado de tu lista",
+                        status: "info",
+                        duration: 2000,
+                        isClosable: true,
+                        });
+                    }}
+                    />
                 ))}
             </SimpleGrid>
 

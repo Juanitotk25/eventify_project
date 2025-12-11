@@ -5,7 +5,7 @@ from .serializers import EventSerializer, CategorySerializer, EventRegistrationS
 from django.db.models import Q, Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EventFilter
-from .models import Event, EventRegistration, Category
+from .models import Event, RegistrationStatus, EventRegistration, Category
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -123,6 +123,64 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({"count": count}, status=status.HTTP_200_OK)
         except:
             return Response({"count": 0}, status=status.HTTP_200_OK)
+        
+    @action(detail=True, methods=['get'])
+    def attendance_report(self, request, pk=None):
+        """
+        Reporte - Solo usernames de las personas
+        """
+        event = self.get_object()
+        
+        # Verificar que el usuario es el organizador
+        if event.organizer != request.user.profile:
+            return Response(
+                {"detail": "Solo el organizador puede ver este reporte."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Estadísticas básicas
+        total_registered = event.registrations.count()
+        total_attended = event.registrations.filter(status=RegistrationStatus.ATTENDED).count()
+        
+        # Obtener usernames de forma simple
+        def get_usernames(queryset):
+            usernames = []
+            for reg in queryset.select_related('user__user'):
+                try:
+                    if hasattr(reg.user, 'user') and reg.user.user:
+                        usernames.append(reg.user.user.username)
+                    else:
+                        usernames.append(f"user_{reg.user_id}")
+                except:
+                    usernames.append("usuario")
+            return usernames
+        
+        # Listas de usernames
+        all_usernames = get_usernames(event.registrations.all())
+        attendee_usernames = get_usernames(event.registrations.filter(status=RegistrationStatus.ATTENDED))
+        pending_usernames = get_usernames(event.registrations.exclude(status=RegistrationStatus.ATTENDED))
+        
+        return Response({
+            "event": {
+                "id": str(event.id),
+                "title": event.title,
+            },
+            "statistics": {
+                "total_registered": total_registered,
+                "total_attended": total_attended,
+                "attendance_rate": round((total_attended / total_registered * 100) if total_registered > 0 else 0, 2),
+                "pending": total_registered - total_attended
+            },
+            "usernames": {
+                "all": all_usernames,  # Todos los que se unieron
+                "attended": attendee_usernames,  # Los que confirmaron asistencia
+                "pending": pending_usernames  # Los que no han confirmado
+            },
+            "counts": {
+                "unique_users": len(set(all_usernames)),
+                "unique_attended": len(set(attendee_usernames))
+            }
+        })
 
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
@@ -141,30 +199,45 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
     def my_events(self, request):
         user_profile = request.user.profile
 
+        # Obtener TODOS los registros del usuario con toda la información
         regs = EventRegistration.objects.filter(user=user_profile) \
-            .select_related("event")
+            .select_related("event", "event__category", "event__organizer")
 
-        # Apply filters on the *event* but keep registration linked
-        events_qs = (Event.objects.filter(id__in=regs.values("event_id"))
-            .annotate(average_rating=Avg("registrations__rating")))
+        # Crear un diccionario con toda la información de cada registro
+        reg_info_map = {}
+        for reg in regs:
+            reg_info_map[str(reg.event_id)] = {
+                "registration_id": str(reg.id),
+                "status": reg.status,
+                "rating": reg.rating,
+                "comment": reg.comment,
+                "created_at": reg.created_at,
+                "updated_at": reg.updated_at
+            }
+
+        # Obtener los eventos y aplicar filtros
+        events_qs = Event.objects.filter(id__in=regs.values("event_id")) \
+            .select_related("category", "organizer") \
+            .annotate(average_rating=Avg("registrations__rating"))
+        
+        # Aplicar filtros si existen
         filtered_events = EventFilter(request.GET, queryset=events_qs).qs
 
-        # Build a map: event_id → registration_id
-        reg_map = {str(reg.event_id): str(reg.id) for reg in regs}
-
-        # Serialize events
+        # Serializar eventos
         event_data = EventSerializer(filtered_events, many=True).data
 
-        # Inject registration_id into each event
+        # Inyectar información del registro en cada evento
         for event in event_data:
-            event["registration_id"] = reg_map.get(event["id"], None)
-
-        print("\n=== EVENT DATA SENT TO FRONT ===")
-        print(event_data)  # <-- prints the injected object
-        print("================================\n")
+            reg_info = reg_info_map.get(event["id"], {})
+            event["registration_id"] = reg_info.get("registration_id")
+            event["registration_status"] = reg_info.get("status", RegistrationStatus.REGISTERED)
+            event["rating"] = reg_info.get("rating")
+            event["comment"] = reg_info.get("comment")
+            event["registration_created_at"] = reg_info.get("created_at")
+            event["registration_updated_at"] = reg_info.get("updated_at")
 
         return Response(event_data, status=status.HTTP_200_OK)
-
+    
     @action(detail=True, methods=["patch"])
     def rate(self, request, pk=None):
         registration = self.get_object()
@@ -188,3 +261,29 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             {"detail": "Review saved successfully."},
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=True, methods=["post"])
+    def confirm_attendance(self, request, pk=None):
+        """
+        Confirmar asistencia a un evento
+        """
+        registration = self.get_object()
+        
+        # Verificar que el usuario es quien dice ser
+        if registration.user != request.user.profile:
+            return Response(
+                {"detail": "No tienes permiso para confirmar asistencia en esta inscripción."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Cambiar estado a ATTENDED
+        registration.status = RegistrationStatus.ATTENDED
+        registration.save()
+        
+        return Response({
+            "success": True,
+            "message": "Asistencia confirmada exitosamente",
+            "status": registration.status
+        }, status=status.HTTP_200_OK)
+    
+    
