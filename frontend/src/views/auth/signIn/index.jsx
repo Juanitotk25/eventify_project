@@ -241,8 +241,8 @@ function SignIn() {
               variant='auth'
               fontSize='sm'
               ms={{ base: "0px", md: "0px" }}
-              _hover={{ color: "whiteAlpha.800" }}
-              _focus={{ color: "white" }}
+              _hover={{ borderColor: "purple.600" }}
+              _focus={{ borderColor: "purple.600" }}
               type='text'
               placeholder='Ingresa tu nombre de usuario'
               mb='24px'
@@ -270,7 +270,10 @@ function SignIn() {
                 mb='24px'
                 size='lg'
                 type={show ? "text" : "password"}
+
                 variant='auth'
+                _hover={{ borderColor: "purple.600" }}
+                _focus={{ borderColor: "purple.600" }}
                 // 9. ASIGNAR VALOR Y CAMBIOS AL ESTADO
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

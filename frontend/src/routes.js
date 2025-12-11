@@ -14,7 +14,6 @@ import {
 // Admin Imports
 import MainDashboard from 'views/admin/default';
 import Profile from 'views/admin/profile';
-import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
 import EventList from "views/admin/eventList";
 import CreateEvent from "views/admin/createEvent";
@@ -63,14 +62,7 @@ const routes = [
     component: <LandingPage />,
   },
   {
-    name: 'Data Tables',
-    layout: '/user',
-    icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    path: '/data-tables',
-    component: <DataTables />,
-  },
-  {
-    name: 'Profile',
+    name: 'Perfil',
     layout: '/user',
     path: '/profile',
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
