@@ -4,17 +4,17 @@ import {
     ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
     Button, useColorModeValue, useToast, IconButton, Badge
 } from "@chakra-ui/react";
-import { MdPeople, MdList, MdCheckCircle } from "react-icons/md";
+import { MdPeople, MdList, MdCheckCircle, MdCancel } from "react-icons/md"; // Añadido MdCancel
 import { FaCommentDots } from "react-icons/fa";
 import moment from "moment";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AttendeeList from "./AttendeeList";
 import ReviewModal from "./ReviewModal";
-import { eventAPI } from "services/api"; // Importar el servicio API
+import { eventAPI } from "services/api";
 
 
-export default function EventCardRating({ event, registrationId, status: propStatus, onAttendanceConfirmed }) {
+export default function EventCardRating({ event, registrationId, status: propStatus, onAttendanceConfirmed, onCancelRegistration }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { 
         isOpen: isAttendeeListOpen, 
@@ -27,11 +27,13 @@ export default function EventCardRating({ event, registrationId, status: propSta
         onClose: onReviewClose
     } = useDisclosure();
     
+    // TODOS LOS HOOKS AL INICIO
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200");
     const cardBg = useColorModeValue("white", "navy.700");
-     const tagColorScheme = useColorModeValue("brand", "gray");
+    const tagColorScheme = useColorModeValue("brand", "gray");
+    
     const toast = useToast();
     
     const [isJoining, setIsJoining] = useState(false);
@@ -39,6 +41,8 @@ export default function EventCardRating({ event, registrationId, status: propSta
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isConfirmingAttendance, setIsConfirmingAttendance] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(propStatus || 'registered');
     
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
@@ -193,6 +197,63 @@ export default function EventCardRating({ event, registrationId, status: propSta
         }
     };
 
+    const handleCancelRegistration = async () => {
+        if (!registrationId) {
+            toast({
+                title: "Error",
+                description: "No se encontró el registro para cancelar.",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        setIsCancelling(true);
+        try {
+            const token = localStorage.getItem("access_token");
+            const response = await axios.delete(
+                `${API_BASE}/api/users/cancel-registration/${registrationId}/`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                }
+            );
+
+            toast({
+                title: "Inscripción cancelada",
+                description: response.data.detail || "Tu inscripción ha sido cancelada exitosamente.",
+                status: "success",
+                duration: 3000,
+                isClosable: true
+            });
+
+            // Cerrar modal si está abierto
+            if (isOpen) onClose();
+            
+            window.dispatchEvent(new CustomEvent('event-joined')); 
+            
+            // Notificar al componente padre para que elimine esta tarjeta
+            if (onCancelRegistration) {
+                onCancelRegistration(event.id);
+            }
+
+        } catch (error) {
+            console.error('Error al cancelar inscripción:', error);
+            toast({
+                title: "Error",
+                description: error.response?.data?.detail || "No se pudo cancelar la inscripción",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+        } finally {
+            setIsCancelling(false);
+            setShowCancelConfirm(false);
+        }
+    };
+
     const handleSubmitReview = async ({ rating, comment }) => {
         if (!rating) {
             toast({
@@ -343,14 +404,34 @@ export default function EventCardRating({ event, registrationId, status: propSta
                         width="100%"
                         size="sm"
                         onClick={(e) => {
-                            e.stopPropagation(); // Prevenir que se abra el modal
+                            e.stopPropagation();
                             handleConfirmAttendance();
                         }}
                         isLoading={isConfirmingAttendance}
                         loadingText="Confirmando..."
-                        mb="3"
+                        mb="2"
                     >
                         Confirmar Asistencia
+                    </Button>
+                )}
+
+                {/* Botón de cancelar inscripción */}
+                {registrationId && (
+                    <Button
+                        leftIcon={<MdCancel />}
+                        colorScheme="red"
+                        variant="outline"
+                        width="100%"
+                        size="sm"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowCancelConfirm(true);
+                        }}
+                        isLoading={isCancelling}
+                        loadingText="Cancelando..."
+                        mb="3"
+                    >
+                        Cancelar Inscripción
                     </Button>
                 )}
 
@@ -386,7 +467,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                         colorScheme="purple"
                         variant="ghost"
                         onClick={(e) => {
-                            e.stopPropagation(); // Prevenir que se abra el modal
+                            e.stopPropagation();
                             onReviewOpen();
                         }}
                     />
@@ -498,7 +579,58 @@ export default function EventCardRating({ event, registrationId, status: propSta
                                     <Box as={MdList} ml={2} />
                                 </Button>
                             </Flex>
+
+                            {/* Botón de cancelar inscripción en el modal */}
+                            {registrationId && (
+                                <Button
+                                    leftIcon={<MdCancel />}
+                                    colorScheme="red"
+                                    variant="outline"
+                                    width="100%"
+                                    size="md"
+                                    onClick={() => setShowCancelConfirm(true)}
+                                    mt={3}
+                                >
+                                    Cancelar Inscripción
+                                </Button>
+                            )}
                         </Flex>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Modal de confirmación para cancelar inscripción */}
+            <Modal isOpen={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} size="sm">
+                <ModalOverlay />
+                <ModalContent borderRadius="2xl">
+                    <ModalHeader>Confirmar Cancelación</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text>
+                            ¿Estás seguro de que deseas cancelar tu inscripción a <strong>{event.title}</strong>?
+                        </Text>
+                        {attendanceStatus === 'attended' && (
+                            <Text mt={2} color="orange.500" fontSize="sm">
+                                ⚠️ Ya has confirmado asistencia a este evento.
+                            </Text>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowCancelConfirm(false)}
+                            mr={3}
+                        >
+                            Volver
+                        </Button>
+                        <Button
+                            colorScheme="red"
+                            onClick={handleCancelRegistration}
+                            isLoading={isCancelling}
+                            loadingText="Cancelando..."
+                        >
+                            Sí, Cancelar Inscripción
+                        </Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
