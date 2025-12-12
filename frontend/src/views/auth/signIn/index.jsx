@@ -53,7 +53,8 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
 
 // URL BASE DE BACKEND
-const API_LOGIN_URL = 'http://127.0.0.1:8000/api/users/login/';
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
+const API_LOGIN_URL = `${API_BASE}/api/users/login/`;
 
 
 function SignIn() {
@@ -129,10 +130,10 @@ function SignIn() {
 
     } catch (error) {
       // 7. Manejo de errores
-      const message = 
-        error.response && error.response.data.detail 
-        ? error.response.data.detail // Mensaje de Django (ej: "No active account found with the given credentials")
-        : "Error de conexión o credenciales inválidas.";
+      const message =
+        error.response && error.response.data.detail
+          ? error.response.data.detail // Mensaje de Django (ej: "No active account found with the given credentials")
+          : "Error de conexión o credenciales inválidas.";
 
       toast({
         title: "Error de Ingreso",
@@ -169,17 +170,17 @@ function SignIn() {
 
         {/* Código de Heading y Text */}
         <Box mt='auto'>
-            <Heading color={textColor} fontSize='6xl' mb='10px'>
-                Ingresa
-            </Heading>
-            <Text
-                mb='36px'
-                ms='4px'
-                color={textColorSecondary}
-                fontWeight='400'
-                fontSize='lg'>
-                Ingresa tu correo electrónico y contraseña para ingresar!
-            </Text>
+          <Heading color={textColor} fontSize='6xl' mb='10px'>
+            Ingresa
+          </Heading>
+          <Text
+            mb='36px'
+            ms='4px'
+            color={textColorSecondary}
+            fontWeight='400'
+            fontSize='lg'>
+            Ingresa tu correo electrónico y contraseña para ingresar!
+          </Text>
         </Box>
 
         <Flex
@@ -208,7 +209,7 @@ function SignIn() {
               borderRadius: "16px",
               background: "linear-gradient(90deg, purple, blue)", // your gradient here
               WebkitMask:
-                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",
               maskComposite: "exclude",
             }}
@@ -331,7 +332,7 @@ function SignIn() {
               mb='24px'
               type='submit' // 10. Indicar que este botón envía el formulario
               isLoading={loading} // Mostrar estado de carga
-              >
+            >
               Iniciar Sesión
             </Button>
           </FormControl>
