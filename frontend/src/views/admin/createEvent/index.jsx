@@ -18,7 +18,7 @@ import {
     Switch,
     useColorModeValue,
     Box,
-    useToast, 
+    useToast,
     FormHelperText,
 } from "@chakra-ui/react";
 
@@ -30,10 +30,10 @@ import { uploadImage } from "utils/uploadImage";
 // URL de la API
 // **********************************************
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
-const API_BASE_URL = `${API_BASE}/api/events`; 
+const API_BASE_URL = `${API_BASE}/api/events`;
 
 // 🚀 CAMBIO CLAVE: Acepta 'initialEvent' como prop.
-export default function EventForm({ initialEvent, onSuccess, onCancel }) { 
+export default function EventForm({ initialEvent, onSuccess, onCancel }) {
     // 1. Estado para el formulario (inicializado con datos vacíos o con initialEvent)
     const [formData, setFormData] = useState({
         title: "",
@@ -46,7 +46,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         cover_url: "",
         is_public: true,
     });
-    
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
     const textColor = useColorModeValue("secondaryGray.900", "white");
@@ -65,7 +65,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
             setFormData({
                 title: initialEvent.title || "",
                 // Asegúrate de que category sea un string, aunque contenga el ID (ej: "4")
-                category: initialEvent.category ? String(initialEvent.category) : "", 
+                category: initialEvent.category ? String(initialEvent.category) : "",
                 startDate: formatDateTime(initialEvent.start_time),
                 endDate: formatDateTime(initialEvent.end_time),
                 location: initialEvent.location || "",
@@ -106,12 +106,12 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
     // 🚀 LÓGICA DE ENVÍO Y EDICIÓN (Maneja POST y PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // --- VALIDACIONES ---
         // 1. Campos obligatorios (excepto opcionales)
         if (!formData.title || !formData.location || !formData.capacity || !formData.startDate) {
-             toast({ title: "Error de validación", description: "Por favor complete todos los campos obligatorios.", status: "error", duration: 5000, isClosable: true });
-             return;
+            toast({ title: "Error de validación", description: "Por favor complete todos los campos obligatorios.", status: "error", duration: 5000, isClosable: true });
+            return;
         }
 
         // 2. Fecha del evento posterior a la actual
@@ -124,15 +124,15 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
 
         // 3. Descripción mínimo 7 caracteres (si se provee)
         if (formData.description && formData.description.length < 7) {
-             toast({ title: "Descripción muy corta", description: "La descripción debe tener mínimo 7 caracteres.", status: "error", duration: 5000, isClosable: true });
-             return;
+            toast({ title: "Descripción muy corta", description: "La descripción debe tener mínimo 7 caracteres.", status: "error", duration: 5000, isClosable: true });
+            return;
         }
         // --------------------
 
         setIsSubmitting(true);
-        
-        const token = localStorage.getItem('access_token'); 
-        
+
+        const token = localStorage.getItem('access_token');
+
         if (!token) {
             toast({ title: "Error de autenticación", description: "Token JWT no encontrado.", status: "error", duration: 5000, isClosable: true });
             setIsSubmitting(false);
@@ -143,13 +143,13 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         const method = isEditing ? 'PUT' : 'POST';
         // Si editamos: /api/events/ID/, si creamos: /api/events/
         const url = isEditing ? `${API_BASE_URL}/${initialEvent.id}/` : `${API_BASE_URL}/`;
-        
+
         const dataToSend = {
             title: formData.title,
             // Si category es string vacío, enviamos null o no lo enviamos si el backend lo permite. 
             // Asumiremos que el backend acepta null si es opcional, o int.
-            category: formData.category ? parseInt(formData.category, 10) : null, 
-            start_time: formData.startDate, 
+            category: formData.category ? parseInt(formData.category, 10) : null,
+            start_time: formData.startDate,
             end_time: formData.endDate || null, // End date es opcional en el modelo pero buena práctica enviarlo si existe
             location: formData.location,
             description: formData.description,
@@ -163,9 +163,9 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
         }
 
         console.log(`Enviando ${method} a ${url} con datos:`, dataToSend);
-        
+
         try {
-            const response = await fetch(url, { 
+            const response = await fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                     duration: 5000,
                     isClosable: true,
                 });
-                
+
                 // 4. Llamar a la función de éxito (si se pasó como prop)
                 if (onSuccess) {
                     onSuccess();
@@ -200,9 +200,9 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
             } else {
                 const errorData = await response.json();
                 console.error('Error de API:', errorData);
-                
-                const errorMessage = errorData.detail 
-                                     || (Object.values(errorData)[0] ? Object.values(errorData)[0][0] : "Hubo un problema con los datos enviados.");
+
+                const errorMessage = errorData.detail
+                    || (Object.values(errorData)[0] ? Object.values(errorData)[0][0] : "Hubo un problema con los datos enviados.");
 
                 toast({
                     title: `Error al ${isEditing ? 'actualizar' : 'crear'} evento.`,
@@ -233,12 +233,12 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
     return (
         <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
             <Text fontSize="3xl" fontWeight="bold" mb="20px" color={textColor} textAlign="center">
-                {headerText} 
+                {headerText}
             </Text>
 
             <form onSubmit={handleSubmit}>
                 <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap="20px" mb="20px">
-                    
+
                     {/* ⬅️ COLUMNA IZQUIERDA - Información Básica */}
                     <Card p="25px">
                         <Text fontSize="2xl" fontWeight="bold" mb="20px" color={textColor}>
@@ -250,7 +250,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             <FormLabel htmlFor="title" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                 Título del Evento
                             </FormLabel>
-                            <Input id="title" name="title" type="text" placeholder="Nombre del evento" onChange={handleChange} value={formData.title} variant="main" h="44px"/>
+                            <Input id="title" name="title" type="text" placeholder="Nombre del evento" onChange={handleChange} value={formData.title} variant="main" h="44px" />
                         </FormControl>
 
                         <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mb="20px">
@@ -259,13 +259,13 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 <FormLabel htmlFor="category" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Categoría
                                 </FormLabel>
-                                <Select 
-                                    id="category" 
-                                    name="category" 
-                                    placeholder="Seleccionar categoría" 
-                                    onChange={handleChange} 
-                                    value={formData.category ? String(formData.category) : ""} 
-                                    variant="main" 
+                                <Select
+                                    id="category"
+                                    name="category"
+                                    placeholder="Seleccionar categoría"
+                                    onChange={handleChange}
+                                    value={formData.category ? String(formData.category) : ""}
+                                    variant="main"
                                     h="44px"
                                 >
                                     <option value="4">Académico</option>
@@ -281,7 +281,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 <FormLabel htmlFor="capacity" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Capacidad
                                 </FormLabel>
-                                <Input id="capacity" name="capacity" type="number" min="1" placeholder="Número de personas" onChange={handleChange} value={formData.capacity} variant="main" h="44px"/>
+                                <Input id="capacity" name="capacity" type="number" min="1" placeholder="Número de personas" onChange={handleChange} value={formData.capacity} variant="main" h="44px" />
                             </FormControl>
                         </SimpleGrid>
 
@@ -290,10 +290,10 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             <FormLabel htmlFor="description" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                 Descripción
                             </FormLabel>
-                            <Textarea id="description" name="description" placeholder="Describe el evento..." onChange={handleChange} value={formData.description} variant="main" rows={6}/>
+                            <Textarea id="description" name="description" placeholder="Describe el evento..." onChange={handleChange} value={formData.description} variant="main" rows={6} />
                         </FormControl>
                     </Card>
-                    
+
                     {/* ➡️ COLUMNA DERECHA - Fecha y Ubicación */}
                     <Card p="25px">
                         <Text fontSize="2xl" fontWeight="bold" mb="20px" color={textColor}>
@@ -306,7 +306,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 <FormLabel htmlFor="startDate" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Fecha Inicio
                                 </FormLabel>
-                                <Input id="startDate" name="startDate" type="datetime-local" onChange={handleChange} value={formData.startDate} variant="main" h="44px"/>
+                                <Input id="startDate" name="startDate" type="datetime-local" onChange={handleChange} value={formData.startDate} variant="main" h="44px" />
                             </FormControl>
 
                             {/* Fecha Fin */}
@@ -314,7 +314,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                 <FormLabel htmlFor="endDate" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                     Fecha Fin
                                 </FormLabel>
-                                <Input id="endDate" name="endDate" type="datetime-local" onChange={handleChange} value={formData.endDate} variant="main" h="44px"/>
+                                <Input id="endDate" name="endDate" type="datetime-local" onChange={handleChange} value={formData.endDate} variant="main" h="44px" />
                             </FormControl>
                         </SimpleGrid>
 
@@ -323,7 +323,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             <FormLabel htmlFor="location" fontSize="sm" fontWeight="500" color={textColor} mb="8px">
                                 Ubicación
                             </FormLabel>
-                            <Input id="location" name="location" type="text" placeholder="Lugar del evento" onChange={handleChange} value={formData.location} variant="main" h="44px"/>
+                            <Input id="location" name="location" type="text" placeholder="Lugar del evento" onChange={handleChange} value={formData.location} variant="main" h="44px" />
                         </FormControl>
 
                         {/* Cover Image URL */}
@@ -393,7 +393,7 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                             fontWeight="500"
                             h="46px"
                             px="40px"
-                            isLoading={isSubmitting} 
+                            isLoading={isSubmitting}
                         >
                             {/* 5. Texto Dinámico del Botón */}
                             {actionText}
