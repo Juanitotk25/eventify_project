@@ -50,6 +50,22 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
     const textColor = useColorModeValue("secondaryGray.900", "white");
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch(`${API_BASE}/api/categories/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategories(data);
+                }
+            } catch (error) {
+                console.error("Error loading categories", error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
 
     // 2. Efecto para cargar los datos del evento si estamos editando
