@@ -123,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-es'
 
-TIME_ZONE = 'UTC'
 
 # Configuración de CORS (Cross-Origin Resource Sharing)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
@@ -142,6 +141,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+TIME_ZONE = "America/Bogota"
 
 
 # Static files (CSS, JavaScript, Images)
