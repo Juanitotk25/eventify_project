@@ -141,7 +141,7 @@ CORS_ALLOW_CREDENTIALS = True
 USE_I18N = True
 
 USE_TZ = True
-TIME_ZONE = "America/Bogota"
+
 
 
 # Static files (CSS, JavaScript, Images)
