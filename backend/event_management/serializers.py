@@ -8,10 +8,13 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 class EventSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_name = serializers.SerializerMethodField()
     organizer_username = serializers.CharField(source='organizer.user.username', read_only=True) 
     cover_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     average_rating = serializers.FloatField(read_only=True)
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
 
     class Meta:
         model = Event
