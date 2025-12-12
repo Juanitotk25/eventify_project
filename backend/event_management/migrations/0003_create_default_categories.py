@@ -12,7 +12,6 @@ def create_default_categories(apps, schema_editor):
         'Cultural',
         'Deportivo',
         'Social',
-        'Tecnología',
         'Networking',
     ]
     
