@@ -124,11 +124,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['email'] = user.email
         
-        # Obtener el rol del perfil si existe
-        try:
-            role = user.profile.role if hasattr(user, 'profile') else 'student'
-        except:
-            role = 'student'
+        # Determinar rol
+        if user.is_superuser:
+            role = 'admin'
+        else:
+            try:
+                role = user.profile.role if hasattr(user, 'profile') else 'student'
+            except:
+                role = 'student'
         
         token['role'] = role
         return token
@@ -136,11 +139,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         
-        # Obtener el rol del perfil
-        try:
-            role = self.user.profile.role if hasattr(self.user, 'profile') else 'student'
-        except:
-            role = 'student'
+        # Determinar rol
+        if self.user.is_superuser:
+            role = 'admin'
+        else:
+            try:
+                role = self.user.profile.role if hasattr(self.user, 'profile') else 'student'
+            except:
+                role = 'student'
         
         # Agrega datos adicionales a la respuesta
         data.update({
