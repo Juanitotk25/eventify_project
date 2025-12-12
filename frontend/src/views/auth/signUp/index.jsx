@@ -54,7 +54,8 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
 
 // URL DEL ENDPOINT DE REGISTRO
-const API_REGISTER_URL = 'http://127.0.0.1:8000/api/users/register/';
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
+const API_REGISTER_URL = `${API_BASE}/api/users/register/`;
 
 function SignUp() {
   const navigate = useNavigate(); // Usamos useNavigate para la redirección
@@ -65,7 +66,7 @@ function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // 2. Control de visibilidad de contraseña
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
@@ -76,15 +77,15 @@ function SignUp() {
     setLoading(true);
 
     if (!username || !email || !password) {
-        toast({
-            title: "Campos Incompletos",
-            description: "Por favor, completa todos los campos requeridos.",
-            status: "warning",
-            duration: 3000,
-            isClosable: true,
-        });
-        setLoading(false);
-        return;
+      toast({
+        title: "Campos Incompletos",
+        description: "Por favor, completa todos los campos requeridos.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoading(false);
+      return;
     }
 
     try {
@@ -105,23 +106,23 @@ function SignUp() {
           isClosable: true,
         });
         // Redirigir a la página de Login
-        navigate('/auth/sign-in'); 
+        navigate('/auth/sign-in');
       }
 
     } catch (error) {
       console.error("Fallo en el Registro:", error.response || error);
-      
+
       let message = "Error desconocido al intentar registrar.";
       // Manejo de errores de validación de Django
       if (error.response && error.response.data) {
-          const data = error.response.data;
-          // Esto captura errores como 'Username already exists' o 'Email is required'
-          if (data.email) message = `Email: ${data.email.join(' ')}`;
-          else if (data.username) message = `Username: ${data.username.join(' ')}`;
-          else if (data.password) message = `Contraseña: ${data.password.join(' ')}`;
-          else if (data.detail) message = data.detail; // Errores generales
+        const data = error.response.data;
+        // Esto captura errores como 'Username already exists' o 'Email is required'
+        if (data.email) message = `Email: ${data.email.join(' ')}`;
+        else if (data.username) message = `Username: ${data.username.join(' ')}`;
+        else if (data.password) message = `Contraseña: ${data.password.join(' ')}`;
+        else if (data.detail) message = data.detail; // Errores generales
       }
-      
+
       toast({
         title: "Error de Registro",
         description: message,
@@ -144,14 +145,14 @@ function SignUp() {
   const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
   const googleText = useColorModeValue("navy.700", "white");
   const googleHover = useColorModeValue(
-      { bg: "gray.200" },
-      { bg: "whiteAlpha.300" }
+    { bg: "gray.200" },
+    { bg: "whiteAlpha.300" }
   );
   const googleActive = useColorModeValue(
-      { bg: "secondaryGray.300" },
-      { bg: "whiteAlpha.200" }
+    { bg: "secondaryGray.300" },
+    { bg: "whiteAlpha.200" }
   );
-  
+
 
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
@@ -193,7 +194,7 @@ function SignUp() {
           mx={{ base: "auto", lg: "unset" }}
           me='auto'
           mb={{ base: "20px", md: "auto" }}>
-          
+
           {/* Botón de Google y Separador omitido por brevedad, se mantiene el JSX original */}
           {/* ... */}
           <Button
@@ -314,12 +315,12 @@ function SignUp() {
               mb='24px'
               type='submit' // 👈 Tipo submit para activar handleRegister
               isLoading={loading} // 👈 Indicador de carga
-              // El texto del botón se cambia a "Registrarse"
+            // El texto del botón se cambia a "Registrarse"
             >
               Registrarse
             </Button>
           </FormControl>
-          
+
           {/* Pie de página "Ya tienes cuenta" */}
           <Flex
             flexDirection='column'

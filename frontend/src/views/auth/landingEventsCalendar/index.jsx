@@ -41,10 +41,11 @@ export default function LandingEventsCalendar() {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 // API endpoint for events - public access, no authentication required
-                const apiUrl = "http://127.0.0.1:8000/api/events/";
-                
+                const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
+                const apiUrl = `${API_BASE}/api/events/`;
+
                 // Fetch public events - anyone can view without authentication
                 const response = await axios.get(apiUrl, {
                     params: {
@@ -54,10 +55,10 @@ export default function LandingEventsCalendar() {
 
                 // Get current date to filter upcoming events
                 const now = new Date();
-                
+
                 // Handle paginated response (results) or direct array
                 const eventsData = response.data.results || response.data || [];
-                
+
                 // Format events for FullCalendar and filter upcoming events
                 const formatted = eventsData
                     .filter((ev) => {
@@ -88,7 +89,7 @@ export default function LandingEventsCalendar() {
                 setEvents(formatted);
             } catch (error) {
                 console.error("Error cargando eventos:", error);
-                
+
                 // Handle different error types
                 if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
                     setError("No se pudo conectar al servidor. Verifique que el backend esté ejecutándose.");

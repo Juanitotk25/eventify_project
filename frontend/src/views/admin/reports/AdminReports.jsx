@@ -39,10 +39,10 @@ const AdminReports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState('all');
-  
+
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
-  
+
   const role = useAuthStore((state) => state.role);
   const user = useAuthStore((state) => state.user);
 
@@ -51,14 +51,15 @@ const AdminReports = () => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('🔑 Token length:', token?.length);
-      
-      const response = await fetch(`http://127.0.0.1:8000/api/admin-reports/?period=${dateRange}`, {
+
+      const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
+      const response = await fetch(`${API_BASE}/api/admin-reports/?period=${dateRange}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('📊 Response status:', response.status);
       const data = await response.json();
       console.log('📦 Data received:', data);
@@ -74,29 +75,29 @@ const AdminReports = () => {
     console.log('👤 User:', user);
     console.log('🎭 Role:', role);
     console.log('📅 Date range:', dateRange);
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('1. Testing direct fetch...');
       const testData = await testDirectFetch();
       console.log('✅ Direct fetch successful');
-      
+
       console.log('2. Now trying with reportService...');
       const data = await reportService.getAdminReports(dateRange);
       console.log('✅ Service fetch successful:', data);
-      
+
       // Verificar estructura de datos
       console.log('📊 Data structure check:');
       console.log('- Has events?', !!data.events);
       console.log('- Events count:', data.events?.length);
       console.log('- Has stats?', !!data.stats);
-      
+
       if (!data || (!data.events && !data.stats)) {
         throw new Error('Datos recibidos en formato incorrecto');
       }
-      
+
       // Procesar eventos
       const eventsWithData = (data.events || []).map(event => {
         console.log('📋 Processing event:', event.name);
@@ -109,9 +110,9 @@ const AdminReports = () => {
           attendance_rate: typeof event.attendance_rate === 'number' ? event.attendance_rate : 0
         };
       });
-      
+
       console.log(`✅ Processed ${eventsWithData.length} events`);
-      
+
       // Procesar estadísticas
       const processedStats = {
         totalEvents: data.stats?.totalEvents || 0,
@@ -123,19 +124,19 @@ const AdminReports = () => {
         totalUsers: data.stats?.totalUsers || 0,
         eventsByCategory: data.stats?.eventsByCategory || {}
       };
-      
+
       console.log('📈 Processed stats:', processedStats);
-      
+
       // Actualizar estado
       setEvents(eventsWithData);
       setStats(processedStats);
-      
+
     } catch (error) {
       console.error('❌ Error completo:', error);
       console.error('Stack:', error.stack);
-      
+
       let errorMessage = 'Error desconocido';
-      
+
       if (error.message.includes('Network Error')) {
         errorMessage = 'Error de red. Verifica que el backend esté corriendo.';
       } else if (error.message.includes('timeout')) {
@@ -147,23 +148,23 @@ const AdminReports = () => {
       } else {
         errorMessage = error.message || 'Error al cargar reportes';
       }
-      
+
       setError(errorMessage);
-      
+
       // Mostrar datos de prueba si hay error
       console.log('🔄 Loading sample data due to error...');
       const sampleData = {
         events: [
-          { 
-            id: '1', 
-            name: 'Evento de Prueba', 
+          {
+            id: '1',
+            name: 'Evento de Prueba',
             date: '2024-12-11',
             time: '10:00',
-            category: 'Test', 
+            category: 'Test',
             organizer: 'Admin',
             location: 'Test Location',
-            attendees: 10, 
-            confirmed: 5, 
+            attendees: 10,
+            confirmed: 5,
             attended: 3,
             status: 'active',
             attendance_rate: 30,
@@ -188,17 +189,17 @@ const AdminReports = () => {
           }
         }
       };
-      
+
       const sampleEvents = sampleData.events.map(event => ({
         ...event,
         totalConfirmed: event.confirmed + event.attended,
         confirmedOnly: event.confirmed,
         attendedOnly: event.attended
       }));
-      
+
       setEvents(sampleEvents);
       setStats(sampleData.stats);
-      
+
     } finally {
       console.log('🏁 fetchAdminReports completed');
       setLoading(false);
@@ -209,17 +210,17 @@ const AdminReports = () => {
     console.log('🔍 useEffect triggered');
     console.log('User exists:', !!user);
     console.log('Role:', role);
-    
+
     if (!user) {
       console.log('⚠️ No user, skipping fetch');
       return;
     }
-    
+
     if (role !== 'admin') {
       console.log('⚠️ Not admin, skipping fetch');
       return;
     }
-    
+
     console.log('✅ Conditions met, fetching reports...');
     fetchAdminReports();
   }, [dateRange, role, user]);
@@ -286,7 +287,7 @@ const AdminReports = () => {
           <Text fontSize='3xl' fontWeight='bold'>{stats.totalEvents || 0}</Text>
           <Text fontSize='sm' color='gray.500'>Creados en el sistema</Text>
         </Card>
-        
+
         <Card p="20px">
           <Text fontSize='xl' fontWeight='bold' color={textColor}>
             Total Inscripciones
@@ -294,15 +295,15 @@ const AdminReports = () => {
           <Text fontSize='3xl' fontWeight='bold'>{stats.totalRegistrations || 0}</Text>
           <Text fontSize='sm' color='gray.500'>Registros totales</Text>
         </Card>
-        
+
         <Card p="20px">
           <Text fontSize='xl' fontWeight='bold' color={textColor}>
             Confirmados + Asistieron
           </Text>
           <Text fontSize='3xl' fontWeight='bold'>{stats.totalConfirmedAndAttended || 0}</Text>
-          <Progress 
-            value={stats.confirmationRate || 0} 
-            size='sm' 
+          <Progress
+            value={stats.confirmationRate || 0}
+            size='sm'
             colorScheme={stats.confirmationRate >= 70 ? 'green' : stats.confirmationRate >= 40 ? 'yellow' : 'red'}
             mt={2}
           />
@@ -310,7 +311,7 @@ const AdminReports = () => {
             {stats.confirmationRate || 0}% de tasa
           </Text>
         </Card>
-        
+
         <Card p="20px">
           <Text fontSize='xl' fontWeight='bold' color={textColor}>
             Usuarios Totales
@@ -350,8 +351,8 @@ const AdminReports = () => {
             Reporte Detallado de Eventos
           </Text>
           <Flex gap='10px'>
-            <Select 
-              width='150px' 
+            <Select
+              width='150px'
               value={dateRange}
               onChange={(e) => {
                 console.log('Date range changed to:', e.target.value);
@@ -363,8 +364,8 @@ const AdminReports = () => {
               <option value='week'>Esta semana</option>
               <option value='month'>Este mes</option>
             </Select>
-            <Button 
-              colorScheme='blue' 
+            <Button
+              colorScheme='blue'
               onClick={() => {
                 console.log('Manual refresh clicked');
                 fetchAdminReports();
@@ -373,7 +374,7 @@ const AdminReports = () => {
             >
               Actualizar
             </Button>
-            <Button 
+            <Button
               colorScheme='green'
               onClick={() => {
                 // Exportar datos actuales
@@ -391,7 +392,7 @@ const AdminReports = () => {
                     getStatusText(event.status)
                   ])
                 ].map(row => row.join(',')).join('\n');
-                
+
                 const blob = new Blob([csvContent], { type: 'text/csv' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -405,7 +406,7 @@ const AdminReports = () => {
             </Button>
           </Flex>
         </Flex>
-        
+
         {loading ? (
           <Flex justify="center" py="50px" direction="column" align="center">
             <Spinner size="xl" />
@@ -467,9 +468,9 @@ const AdminReports = () => {
                       </Td>
                       <Td borderColor={borderColor} width="120px">
                         <Box>
-                          <Progress 
-                            value={event.attendance_rate || 0} 
-                            size="xs" 
+                          <Progress
+                            value={event.attendance_rate || 0}
+                            size="xs"
                             colorScheme={event.attendance_rate >= 70 ? 'green' : event.attendance_rate >= 40 ? 'yellow' : 'red'}
                             mb={1}
                           />
@@ -499,11 +500,11 @@ const AdminReports = () => {
           </Box>
         )}
       </Card>
-      
+
       {/* Botón de depuración */}
-      <Button 
-        size="sm" 
-        colorScheme="gray" 
+      <Button
+        size="sm"
+        colorScheme="gray"
         onClick={() => {
           console.log('=== DEBUG INFO ===');
           console.log('Events:', events);

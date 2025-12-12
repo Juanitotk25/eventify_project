@@ -1,7 +1,8 @@
 // src/services/reportService.js - CON RENOVACIÓN DE TOKEN
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
+const API_URL = `${API_BASE}/api`;
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -28,12 +29,12 @@ const refreshToken = async () => {
   if (!refresh) {
     throw new Error('No hay refresh token');
   }
-  
+
   try {
     const response = await axios.post(`${API_URL}/users/token/refresh/`, {
       refresh: refresh
     });
-    
+
     const { access } = response.data;
     localStorage.setItem('access_token', access);
     return access;
@@ -65,10 +66,10 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Si es error 401 y no es una solicitud de refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
+
       if (isRefreshing) {
         // Si ya se está refrescando, poner en cola
         return new Promise((resolve, reject) => {
@@ -80,10 +81,10 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(err);
         });
       }
-      
+
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       try {
         const newToken = await refreshToken();
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -96,7 +97,7 @@ axiosInstance.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -105,24 +106,24 @@ export const reportService = {
   getAdminReports: async (period = 'all') => {
     try {
       console.log('🔄 Obteniendo reportes admin...');
-      
+
       const response = await axiosInstance.get('/admin-reports/', {
         params: { period }
       });
-      
+
       console.log('✅ Reportes recibidos');
       return response.data;
-      
+
     } catch (error) {
       console.error('❌ Error en getAdminReports:', {
         status: error.response?.status,
         message: error.message
       });
-      
+
       if (error.response?.status === 401) {
         throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
       }
-      
+
       throw error;
     }
   },
