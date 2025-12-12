@@ -28,8 +28,22 @@ import {
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import { MdPeople, MdEvent } from 'react-icons/md';
+import { Pie } from 'react-chartjs-2';
 import { eventService } from '../../../services/eventService';
 import { attendanceService } from '../../../services/attendanceService';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const MyEventsReports = () => {
   const [events, setEvents] = useState([]);
@@ -137,6 +151,16 @@ const MyEventsReports = () => {
     setSelectedEvent(event);
     setIsDetailsModalOpen(true);
   };
+
+  const totalRegistered = events.reduce(
+      (sum, event) => sum + (event.report?.statistics?.total_registered || 0),
+      0
+  );
+
+  const totalAttended = events.reduce(
+      (sum, event) => sum + (event.report?.statistics?.total_attended || 0),
+      0
+  );
 
   if (loading) {
     return (
@@ -293,11 +317,57 @@ const MyEventsReports = () => {
               ))}
             </Tbody>
           </Table>
+          {selectedEvent?.report && (
+          <Box mb={8}>
+            <Text fontWeight="bold" mb={2}>Distribución de Asistencia:</Text>
+            <Pie
+                data={{
+                  labels: ['Inscritos', 'Asistieron'],
+                  datasets: [
+                    {
+                      data: [totalRegistered, totalAttended],
+                      backgroundColor: ['#90cdf4', '#68d391'], // azul y verde Chakra vibes
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                style={{ maxHeight: '280px' }}
+            />
+          </Box>)}
+
+          {events.length > 0 && (
+              <Box mb={10} p={6} bg="white" borderRadius="xl" boxShadow="sm">
+                <Heading size="md" mb={4}>Asistencia por Evento</Heading>
+
+                <Bar
+                    data={{
+                      labels: events.map(e => e.title),
+                      datasets: [
+                        {
+                          label: 'Inscritos',
+                          data: events.map(e => e.report?.statistics?.total_registered || 0),
+                          backgroundColor: '#9f7aea', // purple
+                        },
+                        {
+                          label: 'Asistieron',
+                          data: events.map(e => e.report?.statistics?.total_attended || 0),
+                          backgroundColor: '#48bb78', // green
+                        }
+                      ]
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: { legend: { position: 'bottom' } },
+                    }}
+                    style={{ maxHeight: '350px' }}
+                />
+              </Box>
+          )}
 
           {/* Instrucciones */}
-          <Alert status="info" borderRadius="lg" mb={6}>
+          <Alert status="info" borderRadius="lg" mt="auto" position='relative'>
             <AlertIcon />
-            <Box>
+            <Box mt='auto'>
               <Text fontWeight="bold">Información importante</Text>
               <Text fontSize="sm">
                 • "Inscritos": Personas que se unieron al evento<br />
@@ -324,6 +394,7 @@ const MyEventsReports = () => {
           zIndex="1000"
           onClick={() => setIsDetailsModalOpen(false)}
         >
+
           <Box
             bg="white"
             p={6}
