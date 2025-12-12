@@ -15,14 +15,27 @@ const createLinkItem = (route, index, activeRoute, activeIcon, textColor, active
                 <Box>
                     <HStack
                         spacing={isActive ? "22px" : "26px"}
+                        role="group"
                         py='5px'
-                        ps='10px'>
+                        ps='10px'
+                        _hover={{
+                            color: activeColor, // everything inherits this
+                            cursor: "pointer",
+                        }}>
                         <Flex w='100%' alignItems='center' justifyContent='center'>
-                            <Box color={isActive ? activeIcon : textColor} me='18px'>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                color={isActive ? activeIcon : textColor}
+                                me='18px'
+                                _groupHover={{ color: activeIcon }}>
                                 {route.icon}
                             </Box>
                             <Text
-                                me='auto'
+                                mr='auto'
+                                lineHeight="1"
+                                _groupHover={{ color: activeColor }}
                                 color={isActive ? activeColor : textColor}
                                 fontWeight={isActive ? "bold" : "normal"}>
                                 {route.name}

@@ -1,9 +1,10 @@
 // chakra imports
-import { Box, Flex, Stack } from "@chakra-ui/react";
+import {Box, Flex, Image, Stack} from "@chakra-ui/react";
 //   Custom components
 import Brand from "components/sidebar/components/Brand";
 import Links from "components/sidebar/components/Links";
 import React from "react";
+import sideBarIllustration from "../../../assets/img/elephant.png";
 
 // FUNCTIONS
 
@@ -18,6 +19,13 @@ function SidebarContent(props) {
           <Links routes={routes} />
         </Box>
       </Stack>
+        <Box position="relative" mt="auto" py={1}>
+            <Image
+                src={sideBarIllustration}
+                alt="Elephant"
+                style={{ width: "12vw", height: "auto" }}
+            />
+        </Box>
     </Flex>
   );
 }
