@@ -376,7 +376,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
                 <Text color={accentColor} fontSize="sm" mb="1">
                     {event.start_time
-                        ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm")
+                        ? moment(event.start_time.replace("T", " ").replace("Z", "")).format("D [de] MMMM, YYYY HH:mm")
                         : "Sin fecha"
                     } • {event.location || "Sin ubicación"}
                 </Text>
@@ -515,7 +515,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                             <Text mb="2">
                                 <strong>Fecha:</strong>{" "}
                                 {event.start_time
-                                    ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm")
+                                    ? moment(event.start_time.replace("T", " ").replace("Z", "")).format("D [de] MMMM, YYYY HH:mm")
                                     : "Sin fecha"}
                             </Text>
 

@@ -230,7 +230,7 @@ export default function EventList() {
                         </Text>
                         
                         <Text color="gray.500" fontSize="sm" mb="1">
-                            {event.start_time ? moment(event.start_time).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
+                            {event.start_time ? moment(event.start_time.replace("T", " ").replace("Z", "")).format("D [de] MMMM, YYYY HH:mm") : "Sin fecha"} • {event.location || "Sin ubicación"}
                         </Text>
                         <Text fontSize="sm" mb="3" color={textColor}>
                             {event.description || "Sin descripción"}
