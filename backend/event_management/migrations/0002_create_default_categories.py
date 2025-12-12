@@ -27,7 +27,7 @@ def create_default_categories(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('event_management', '0001_initial'),  # Cambia esto al nombre de tu última migración
+        ('event_management', '0002_eventregistration_comment_eventregistration_rating'),
     ]
 
     operations = [
