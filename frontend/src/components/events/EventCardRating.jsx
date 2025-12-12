@@ -16,26 +16,26 @@ import { eventAPI } from "services/api";
 
 export default function EventCardRating({ event, registrationId, status: propStatus, onAttendanceConfirmed, onCancelRegistration }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const { 
-        isOpen: isAttendeeListOpen, 
-        onOpen: onAttendeeListOpen, 
-        onClose: onAttendeeListClose 
+    const {
+        isOpen: isAttendeeListOpen,
+        onOpen: onAttendeeListOpen,
+        onClose: onAttendeeListClose
     } = useDisclosure();
     const {
         isOpen: isReviewOpen,
         onOpen: onReviewOpen,
         onClose: onReviewClose
     } = useDisclosure();
-    
+
     // TODOS LOS HOOKS AL INICIO
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "purple.200");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200");
     const cardBg = useColorModeValue("white", "navy.700");
     const tagColorScheme = useColorModeValue("brand", "gray");
-    
+
     const toast = useToast();
-    
+
     const [isJoining, setIsJoining] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
@@ -44,10 +44,10 @@ export default function EventCardRating({ event, registrationId, status: propSta
     const [isCancelling, setIsCancelling] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(propStatus || 'registered');
-    
+
     const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000";
     const rating_avg = event.average_rating || 0;
-    
+
     // MAPEO DE CATEGORÍAS
     const CATEGORY_MAP = {
         4: "Académico",
@@ -99,12 +99,12 @@ export default function EventCardRating({ event, registrationId, status: propSta
         setIsJoining(true);
         const token = localStorage.getItem("access_token");
         if (!token) {
-            toast({ 
-                title: "Error", 
-                description: "Debes iniciar sesión para inscribirte.", 
-                status: "error", 
-                duration: 3000, 
-                isClosable: true 
+            toast({
+                title: "Error",
+                description: "Debes iniciar sesión para inscribirte.",
+                status: "error",
+                duration: 3000,
+                isClosable: true
             });
             setIsJoining(false);
             return;
@@ -112,29 +112,29 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
         try {
             await eventAPI.joinEvent(event.id);
-            
-            toast({ 
-                title: "¡Inscripción exitosa!", 
-                description: "Te has inscrito al evento correctamente.", 
-                status: "success", 
-                duration: 3000, 
-                isClosable: true 
+
+            toast({
+                title: "¡Inscripción exitosa!",
+                description: "Te has inscrito al evento correctamente.",
+                status: "success",
+                duration: 3000,
+                isClosable: true
             });
-            
+
             setIsRegistered(true);
-            window.dispatchEvent(new CustomEvent('event-joined', { 
+            window.dispatchEvent(new CustomEvent('event-joined', {
                 detail: { eventId: event.id, eventTitle: event.title }
             }));
             window.dispatchEvent(new Event('registration-updated'));
-            
+
         } catch (error) {
             const msg = error.response?.data?.detail || "Error al inscribirse al evento.";
-            toast({ 
-                title: "Error", 
-                description: msg, 
-                status: "error", 
-                duration: 3000, 
-                isClosable: true 
+            toast({
+                title: "Error",
+                description: msg,
+                status: "error",
+                duration: 3000,
+                isClosable: true
             });
         } finally {
             setIsJoining(false);
@@ -177,7 +177,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
             // Actualizar estado local
             setAttendanceStatus('attended');
-            
+
             // Notificar al componente padre
             if (onAttendanceConfirmed) {
                 onAttendanceConfirmed(event.id);
@@ -231,9 +231,9 @@ export default function EventCardRating({ event, registrationId, status: propSta
 
             // Cerrar modal si está abierto
             if (isOpen) onClose();
-            
-            window.dispatchEvent(new CustomEvent('event-joined')); 
-            
+
+            window.dispatchEvent(new CustomEvent('event-joined'));
+
             // Notificar al componente padre para que elimine esta tarjeta
             if (onCancelRegistration) {
                 onCancelRegistration(event.id);
@@ -271,7 +271,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
         try {
             await axios.patch(
                 `${API_BASE}/api/registrations/${registrationId}/rate/`,
-                { rating, comment},
+                { rating, comment },
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -304,8 +304,8 @@ export default function EventCardRating({ event, registrationId, status: propSta
     // Determinar color y texto del badge de asistencia
     const getAttendanceBadgeProps = () => {
         const status = attendanceStatus.toLowerCase();
-        
-        switch(status) {
+
+        switch (status) {
             case 'attended':
                 return { colorScheme: 'green', text: 'Asistencia Confirmada' };
             case 'confirmed':
@@ -359,13 +359,13 @@ export default function EventCardRating({ event, registrationId, status: propSta
                         >
                             {badgeProps.text}
                         </Badge>
-                        
+
                         <Tag
                             size="sm"
                             colorScheme={tagColorScheme}
                             fontWeight="bold"
                         >
-                            {getCategoryName(event.category)}
+                            {event.category_name || "General"}
                         </Tag>
                     </Flex>
                 )}
@@ -491,7 +491,7 @@ export default function EventCardRating({ event, registrationId, status: propSta
                             objectFit="cover"
                             mb="4"
                         />
-                        
+
                         {/* Estado de asistencia en el modal */}
                         {registrationId && (
                             <Flex justify="center" mb="4">
