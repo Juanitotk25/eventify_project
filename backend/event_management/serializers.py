@@ -71,3 +71,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "email", "first_name", "last_name"]
+
+class EventCommentSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.user.username')
+
+    class Meta:
+        model = EventRegistration
+        fields = ['id', 'user_name', 'rating', 'comment', 'created_at']

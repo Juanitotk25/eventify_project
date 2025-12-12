@@ -2,7 +2,8 @@ import {
     Card, Image, Flex, Text, Tag, Box,
     useDisclosure, Modal, ModalOverlay, ModalContent,
     ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
-    Button, useColorModeValue, useToast
+    Button, useColorModeValue, useToast, Drawer, DrawerOverlay, DrawerContent,
+    DrawerHeader, DrawerBody, DrawerCloseButton
 } from "@chakra-ui/react";
 import { MdPeople, MdList } from "react-icons/md";
 import moment from "moment";
@@ -24,14 +25,17 @@ export default function EventCard({ event }) {
     const toast = useToast();
     const [isJoining, setIsJoining] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [comments, setComments] = useState([]);
     const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
 
     // Check if user is registered when modal opens
     useEffect(() => {
         if (isOpen) {
             checkRegistrationStatus();
+            loadComments();
         }
     }, [isOpen, event.id]);
+
 
     const checkRegistrationStatus = async () => {
         const token = localStorage.getItem("access_token");
@@ -102,6 +106,15 @@ export default function EventCard({ event }) {
             });
         } finally {
             setIsJoining(false);
+        }
+    };
+
+    const loadComments = async () => {
+        try {
+            const data = await eventAPI.getComments(event.id);
+            setComments(data);
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -260,6 +273,49 @@ export default function EventCard({ event }) {
                     window.dispatchEvent(new CustomEvent('event-joined'));
                 }}
             />
+
+
+            <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+                <DrawerOverlay />
+                <DrawerContent h="70vh"
+                               mt="10vh"
+                               borderRadius="xl" >
+                    <DrawerCloseButton />
+                    <DrawerHeader>Comentarios</DrawerHeader>
+
+                    <DrawerBody>
+                        {comments.length === 0 && (
+                            <Text color={textColor}>No hay comentarios todavía.</Text>
+                        )}
+
+                        {comments.map((c) => (
+                            <Box
+                                key={c.id}
+                                p="3"
+                                borderRadius="lg"
+                                border="1px"
+                                borderColor="purple.100"
+                                bg={cardBg}
+                                mb="3"
+                                boxShadow="md"
+                            >
+                                <Text fontWeight="bold">@{c.user_name}</Text>
+
+                                {/* rating */}
+                                <Flex>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Box key={star} color={c.rating >= star ? "yellow.400" : "gray.500"}>
+                                            ★
+                                        </Box>
+                                    ))}
+                                </Flex>
+
+                                <Text mt="2">{c.comment}</Text>
+                            </Box>
+                        ))}
+                    </DrawerBody>
+                </DrawerContent>
+            </Drawer>
         </>
     );
 }

@@ -107,6 +107,16 @@ export const eventAPI = {
       return { is_registered: false };
     }
   },
+
+  getComments: async (eventId) => {
+    try {
+      const response = await api.get(`/api/events/${eventId}/comments/`);
+      return response.data; // lista de comentarios
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      return []; // fallback super seguro
+    }
+  },
 };
 
 // Exportar la instancia de axios por si la necesitas directamente

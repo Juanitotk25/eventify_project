@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.filters import SearchFilter
-from .serializers import EventSerializer, CategorySerializer, EventRegistrationSerializer
+from .serializers import EventSerializer, CategorySerializer, EventRegistrationSerializer, EventCommentSerializer
 from django.db.models import Q, Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EventFilter
@@ -182,6 +182,17 @@ class EventViewSet(viewsets.ModelViewSet):
             }
         })
 
+    @action(detail=True, methods=['get'])
+    def comments(self, request, pk=None):
+        """Return comments + rating for this event."""
+        registrations = EventRegistration.objects.filter(
+            event_id=pk,
+            comment__isnull=False
+        ).exclude(comment="")  # Only with actual comments
+
+        serializer = EventCommentSerializer(registrations, many=True)
+        return Response(serializer.data)
+
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
@@ -285,5 +296,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             "message": "Asistencia confirmada exitosamente",
             "status": registration.status
         }, status=status.HTTP_200_OK)
+
+
     
     
