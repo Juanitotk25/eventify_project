@@ -3,13 +3,14 @@ import {
     useDisclosure, Modal, ModalOverlay, ModalContent,
     ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
     Button, useColorModeValue, useToast, Drawer, DrawerOverlay, DrawerContent,
-    DrawerHeader, DrawerBody, DrawerCloseButton
+    DrawerHeader, DrawerBody, DrawerCloseButton, IconButton
 } from "@chakra-ui/react";
 import { MdPeople, MdList } from "react-icons/md";
 import moment from "moment";
 import React, { useState, useEffect } from "react";
 import AttendeeList from "./AttendeeList";
-import { eventAPI } from "services/api"; // Importar el servicio API
+import { eventAPI } from "services/api";
+import {FaCommentDots} from "react-icons/fa"; // Importar el servicio API
 
 export default function EventCard({ event }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -18,6 +19,12 @@ export default function EventCard({ event }) {
         onOpen: onAttendeeListOpen,
         onClose: onAttendeeListClose
     } = useDisclosure();
+    const {
+        isOpen: isDrawerOpen,
+        onOpen: onDrawerOpen,
+        onClose: onDrawerClose
+    } = useDisclosure();
+
     const textColor = useColorModeValue("secondaryGray.900", "white");
     const titleColor = useColorModeValue("navy.900", "white");
     const accentColor = useColorModeValue("secondaryGray.500", "purple.200")
@@ -237,6 +244,19 @@ export default function EventCard({ event }) {
                             justifyContent="flex-end"
                             w="100%"
                         >
+                            <IconButton
+                                mr="auto"
+                                aria-label="Review event"
+                                fontSize="2xl"
+                                boxSize={10}
+                                icon={<FaCommentDots />}
+                                colorScheme="purple"
+                                variant="ghost"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDrawerOpen();
+                                }}
+                            />
                             <Button
                                 colorScheme="green"
                                 onClick={handleJoin}
@@ -275,7 +295,7 @@ export default function EventCard({ event }) {
             />
 
 
-            <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+            <Drawer isOpen={isDrawerOpen} placement="right" onClose={onDrawerClose} trapFocus={false} autoFocus={false}>
                 <DrawerOverlay />
                 <DrawerContent h="70vh"
                                mt="10vh"

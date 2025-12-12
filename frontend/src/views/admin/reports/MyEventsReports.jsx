@@ -317,9 +317,9 @@ const MyEventsReports = () => {
               ))}
             </Tbody>
           </Table>
-          {selectedEvent?.report && (
+          {events.length > 0 &&  (
           <Box mb={8}>
-            <Text fontWeight="bold" mb={2}>Distribución de Asistencia:</Text>
+            <Heading size="md" mb={4}>Distribución de Asistencia</Heading>
             <Pie
                 data={{
                   labels: ['Inscritos', 'Asistieron'],
