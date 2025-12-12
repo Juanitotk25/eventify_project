@@ -268,11 +268,11 @@ export default function EventForm({ initialEvent, onSuccess, onCancel }) {
                                     variant="main"
                                     h="44px"
                                 >
-                                    <option value="4">Académico</option>
-                                    <option value="5">Cultural</option>
-                                    <option value="6">Deportivo</option>
-                                    <option value="7">Social</option>
-                                    <option value="8">Networking</option>
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
                                 </Select>
                             </FormControl>
 
